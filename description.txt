@@ -1,16 +1,8 @@
 This mod allows the creation of paintings which depicts images from a given URL.
 
-Guide:
-To start simply type the following command in chat in order to get a painting.
-/painting <URL> <X Size> <Y Size>
-Note: the X and Y dimensions are in tiles, and both have value cap of 33
+To get more information please visit the homepage.
 
-The item can only be used on a walled area with adequate space. The painting will spawn from your mouse cursor, with the top left corner being the origin.
-
-Bugs:
-In any situation that the painting glitches out and prevents you from placing blocks at a given coordinate:
-1. Get another painting using the command above.
-2. And at water, craft an Error Potion
-
-When drunk, the error potion should allow you to see painting tiles for manual removal.
-Please report all bugs via github. [ Home Page ]
+Update v1.1:
+Fixed issue preventing 64 bit support
+Fixed loading issue on larger images when moving away
+Improved performance when loading images

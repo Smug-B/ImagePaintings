@@ -29,8 +29,20 @@ namespace ImagePaintings
 	{
 		public Dictionary<Point16, Texture2D> LoadedImagePaintings = new Dictionary<Point16, Texture2D>();
 
-		public static Texture2D GetTextureFromURL(string URL, int Scale)
+		public void SetLIPData(Point16 position, Texture2D texture)
         {
+			if (LoadedImagePaintings.ContainsKey(position))
+			{
+				LoadedImagePaintings[position] = texture;
+			}
+			else
+			{
+				LoadedImagePaintings.Add(position, texture);
+			}
+		}
+
+		public static Texture2D GetTextureFromURL(string URL, int Scale)
+		{
 			Texture2D texture = ModContent.GetTexture("ImagePaintings/BruhCat");
 
 			if (Scale <= 0)
@@ -38,7 +50,7 @@ namespace ImagePaintings
 				string ErrorText = "Image dimensions cannot be Zero or Negative!";
 				if (Main.dedServ)
 				{
-					NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(ErrorText), Microsoft.Xna.Framework.Color.Red);;
+					NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(ErrorText), Microsoft.Xna.Framework.Color.Red); ;
 				}
 				else
 				{
@@ -62,18 +74,17 @@ namespace ImagePaintings
 			}
 
 			ServicePointManager.Expect100Continue = true;
-			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3; // Allows us to access images
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 			WebClient GetImage = new WebClient();
-			Stream stream = GetImage.OpenRead(URL); //Creates a new stream from the data of the url
-			using (MemoryStream Memory = new MemoryStream())
+			Stream stream = GetImage.OpenRead(URL);
+			if (!(stream is MemoryStream))
 			{
-				using (Image image = Image.FromStream(stream))
-				{
-					image.Save(Memory, ImageFormat.Png);
-				}
-
-				texture = Texture2D.FromStream(Main.instance.GraphicsDevice, Memory, Scale * 16, Scale * 16, false);
+				MemoryStream memoryStream = new MemoryStream();
+				stream.CopyTo(memoryStream);
+				memoryStream.Position = 0L;
+				stream = memoryStream;
 			}
+			texture = Texture2D.FromStream(Main.instance.GraphicsDevice, stream, Scale * 16, Scale * 16, false);
 			return texture;
 		}
 
@@ -97,18 +108,20 @@ namespace ImagePaintings
 					{
 						Vector2 value = reader.ReadVector2();
 						if (Main.netMode == NetmodeID.Server)
-                        {
+						{
 							return;
-                        }
+						}
 						CanvasTE canvas = TileEntity.ByPosition[new Point16((int)value.X, (int)value.Y)] as CanvasTE;
 						ImagePaintings mod = ModContent.GetInstance<ImagePaintings>();
-						if (mod.LoadedImagePaintings.ContainsKey(new Point16((int)value.X, (int)value.Y)))
+						Point16 pos = value.ToPoint16();
+						Texture2D image = GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y));
+						if (mod.LoadedImagePaintings.ContainsKey(pos))
 						{
-							mod.LoadedImagePaintings[new Point16((int)value.X, (int)value.Y)] = GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y));
+							mod.LoadedImagePaintings[pos] = image;
 						}
 						else
 						{
-							mod.LoadedImagePaintings.Add(new Point16((int)value.X, (int)value.Y), GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y)));
+							mod.LoadedImagePaintings.Add(pos, image);
 						}
 					}
 					break;
@@ -131,7 +144,7 @@ namespace ImagePaintings
 		}
 
 		public static void DeleteImagePainting(CanvasTE te)
-        {
+		{
 			for (int X = te.Position.X; X < te.Position.X + te.ImageDimensions.X; X++)
 			{
 				for (int Y = te.Position.Y; Y < te.Position.Y + te.ImageDimensions.Y; Y++)
@@ -142,7 +155,7 @@ namespace ImagePaintings
 					}
 
 					Tile tile = Framing.GetTileSafely(X, Y);
-					if (tile.type == ModContent.TileType<BlankCanvas>() && tile.active())
+					if ((tile.type == ModContent.TileType<BlankCanvas>() || tile.type == ModContent.TileType<NewCanvas>()) && tile.active())
 					{
 						tile.active(false);
 						tile.halfBrick(false);
@@ -162,18 +175,16 @@ namespace ImagePaintings
 		}
 
 		public override void Unload()
-        {
+		{
 			LoadedImagePaintings = null;
 		}
 
-        public override void PostUpdateEverything()
+		public override void PostUpdateEverything()
 		{
 			if (Main.netMode == NetmodeID.Server)
 			{
 				return;
 			}
-
-			//Main.NewText(Main.MouseWorld.ToTileCoordinates().ToVector2().ToString());
 		}
-    }
+	}
 }
