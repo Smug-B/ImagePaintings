@@ -46,22 +46,25 @@ namespace ImagePaintings.Core.Tiles
 		public override bool PreDraw(int i, int j, SpriteBatch spriteBatch)
 		{
 			Point16 Position = new Point16(i, j);
+
 			if (Framing.GetTileSafely(i, j).frameX == 0 && Framing.GetTileSafely(i, j).frameY == 0 && !Main.LocalPlayer.HasBuff(mod.BuffType("Error")))
 			{
 				if (TileEntity.ByPosition.ContainsKey(Position))
 				{
 					CanvasTE canvas = TileEntity.ByPosition[Position] as CanvasTE;
 
+					List<Point> Items = new List<Point>();
+					for (int X = i; X < i + canvas.ImageDimensions.X; X++)
+                    {
+						for (int Y = j; Y < j + canvas.ImageDimensions.Y; Y++)
+						{
+							Items.Add(new Point(X, Y));
+						}
+					}
+
 					void UpdateData()
 					{
-						if (Mod.LoadedImagePaintings.ContainsKey(Position))
-						{
-							Mod.LoadedImagePaintings[Position] = ImagePaintings.GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y));
-						}
-						else
-						{
-							Mod.LoadedImagePaintings.Add(Position, ImagePaintings.GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y)));
-						}
+						Mod.SetLIPData(Position, ImagePaintings.GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y)));
 
 						if (Main.netMode == NetmodeID.MultiplayerClient)
 						{
@@ -90,7 +93,6 @@ namespace ImagePaintings.Core.Tiles
 						else
 						{
 							UpdateData();
-
 						}
 					}
 					else

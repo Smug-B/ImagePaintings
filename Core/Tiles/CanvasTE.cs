@@ -16,9 +16,9 @@ namespace ImagePaintings.Core.Tiles
 	public class CanvasTE : ModTileEntity
 	{
 		public int Timer = 0;
-		//public List<Vector2> Children = new List<Vector2>();
 		public string ImageURL;
 		public Vector2 ImageDimensions = Vector2.Zero;
+		public int Version;
 		public bool NeedsSyncing;
 
 		public bool CheckForInaccuracies()
@@ -33,7 +33,7 @@ namespace ImagePaintings.Core.Tiles
 					}
 
 					Tile tile = Framing.GetTileSafely(X, Y);
-					if (tile.type != ModContent.TileType<BlankCanvas>())
+					if (tile.type != ModContent.TileType<BlankCanvas>() && tile.type != ModContent.TileType<NewCanvas>())
 					{
 						return true;
 					}
@@ -59,7 +59,7 @@ namespace ImagePaintings.Core.Tiles
 					item.SavedImage = ModContent.GetInstance<ImagePaintings>().LoadedImagePaintings[Position];
 				}
 			}
-			ModContent.GetInstance<ImagePaintings>().LoadedImagePaintings[Position] = default;
+			ModContent.GetInstance<ImagePaintings>().LoadedImagePaintings[Position] = null;
 			item.ImageURL = ImageURL;
 			item.ImageDimensions = ImageDimensions;
 			if (Main.netMode != NetmodeID.SinglePlayer)
@@ -71,7 +71,7 @@ namespace ImagePaintings.Core.Tiles
 		public override bool ValidTile(int i, int j)
 		{
 			Tile tile = Framing.GetTileSafely(i, j);
-			return tile.active() && tile.type == ModContent.TileType<BlankCanvas>() && tile.frameX == 0 && tile.frameY == 0;
+			return tile.active() && (tile.type == ModContent.TileType<BlankCanvas>() || tile.type == ModContent.TileType<NewCanvas>()) && tile.frameX == 0 && tile.frameY == 0;
 		}
 
 		public override void Update()
@@ -116,6 +116,7 @@ namespace ImagePaintings.Core.Tiles
 			{
 				{"ImageURL", ImageURL},
 				{"ImageDimensions", ImageDimensions },
+				{"Version", Version },
 			};
 		}
 
@@ -126,18 +127,23 @@ namespace ImagePaintings.Core.Tiles
 
 			Vector2 Dims = tag.Get<Vector2>("ImageDimensions");
 			ImageDimensions = Dims;
+
+			int vers = tag.Get<int>("Version");
+			Version = vers;
 		}
 
         public override void NetSend(BinaryWriter writer, bool lightSend)
         {
 			writer.Write(ImageURL);
 			writer.WritePackedVector2(ImageDimensions);
-        }
+			writer.Write(Version);
+		}
 
         public override void NetReceive(BinaryReader reader, bool lightReceive)
         {
 			ImageURL= reader.ReadString();
 			ImageDimensions = reader.ReadPackedVector2();
+			Version = reader.ReadInt32();
 		}
 
 		public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction)

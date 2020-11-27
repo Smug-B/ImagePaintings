@@ -61,36 +61,40 @@ namespace ImagePaintings.Core.Items
 			Item item = player.inventory[InventorySlot];
 			int i = Position.X;
 			int j = Position.Y;
-			List<Vector2> TEPositions = new List<Vector2>();
+			List<Point16> TEPositions = new List<Point16>();
 			PaintingData data = item.GetGlobalItem<PaintingData>();
+
+			bool CheckIfCorner(int X, int Y)
+			{
+				return (X == i && Y == j) || (X == i + data.ImageDimensions.X || Y == j) || (X == i + data.ImageDimensions.X || Y == j + data.ImageDimensions.Y) || (X == i || Y == j + data.ImageDimensions.Y);
+			}
+
 			for (int X = i; X < i + data.ImageDimensions.X; X++)
 			{
 				for (int Y = j; Y < j + data.ImageDimensions.Y; Y++)
 				{
-					TEPositions.Add(new Vector2(X, Y));
-					WorldGen.PlaceTile(X, Y, ModContent.TileType<BlankCanvas>(), true);
+					WorldGen.PlaceTile(X, Y, ModContent.TileType<NewCanvas>(), true);
 					Tile ExtraCanvas = Framing.GetTileSafely(X, Y);
-					ExtraCanvas.frameX = (short)((X == i && Y == j) ? 0 : 18);
-					ExtraCanvas.frameY = 0;
+					ExtraCanvas.frameX = (short)((X - i) * 16);
 					NetMessage.SendTileRange(-1, X, Y, 1, 1, TileChangeType.None);
+
+					if (CheckIfCorner(X, Y))
+					{
+						TEPositions.Add(new Point16(X, Y));
+					}
 				}
 			}
 
-			ModTileEntity thisTE = ModContent.GetInstance<CanvasTE>();
-			thisTE.Hook_AfterPlacement(i, j, ModContent.GetInstance<CanvasTE>().type, -1, -1);
-			TileEntity te = TileEntity.ByPosition[new Point16(i, j)];
-			var PaintingInstance = te as CanvasTE;
 			ImagePaintings mod = ModContent.GetInstance<ImagePaintings>();
-			if (mod.LoadedImagePaintings.ContainsKey(new Point16(i, j)))
-			{
-				mod.LoadedImagePaintings[new Point16(i, j)] = data.SavedImage;
-			}
-			else
-            {
-				mod.LoadedImagePaintings.Add(new Point16(i, j), data.SavedImage);
-            }
+			mod.SetLIPData(new Point16(Position.X, Position.Y), data.SavedImage);
+
+			ModTileEntity thisTE = ModContent.GetInstance<CanvasTE>();
+			thisTE.Hook_AfterPlacement(Position.X, Position.Y, ModContent.GetInstance<CanvasTE>().type, -1, -1);
+			TileEntity te = TileEntity.ByPosition[new Point16(Position.X, Position.Y)];
+			var PaintingInstance = te as CanvasTE;
 			PaintingInstance.ImageURL = data.ImageURL;
 			PaintingInstance.ImageDimensions = data.ImageDimensions;
+			PaintingInstance.Version = 1;
 			PaintingInstance.NeedsSyncing = true;
 		}
 
