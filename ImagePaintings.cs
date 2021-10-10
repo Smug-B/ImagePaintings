@@ -1,91 +1,149 @@
-using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Net;
-using Terraria;
-using Terraria.ID;
-using Terraria.Localization;
-using Terraria.ModLoader;
-using Terraria.DataStructures;
-using ImagePaintings.Core.Tiles;
-using ImagePaintings.Core.Items;
+using ImagePaintings.Content.Items;
+using ImagePaintings.Content.Tiles;
 using Microsoft.Xna.Framework;
-using Color = Microsoft.Xna.Framework.Color;
+using Microsoft.Xna.Framework.Graphics;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using System;
 using System.Collections.Generic;
-using Point = Microsoft.Xna.Framework.Point;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Threading.Tasks;
+using Terraria;
+using Terraria.DataStructures;
+using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace ImagePaintings
 {
-	internal enum MessageType : byte
-	{
-		CreatePainting,
-		UpdateImageData,
-		KillPainting,
-	}
-
 	public class ImagePaintings : Mod
 	{
-		public Dictionary<Point16, Texture2D> LoadedImagePaintings = new Dictionary<Point16, Texture2D>();
+		public enum MessageType : byte
+		{
+			CreatePainting,
+			KillPainting,
+		}
 
-		public void SetLIPData(Point16 position, Texture2D texture)
-        {
-			if (LoadedImagePaintings.ContainsKey(position))
+		public static ImagePaintings Mod { get; private set; }
+
+		public static IPAddress Google = new IPAddress(new byte[] { 8, 8, 8, 8 });
+
+		public static IDictionary<ImageIndex, ImageData> AllLoadedImages = new Dictionary<ImageIndex, ImageData>();
+
+		public ImagePaintings() => Mod = this;
+
+		public static bool PingGoogle()
+		{
+			Ping ping = new Ping();
+			PingReply reply = ping.Send(Google, 1000);
+			return reply != null && reply.Status == IPStatus.Success;
+		}
+
+		public static async Task<Texture2D> FetchImage(string url, int sizeX, int sizeY)
+		{
+			ImageIndex indexer = new ImageIndex(url, sizeX, sizeY);
+			ImagePaintingConfigs configs = ModContent.GetInstance<ImagePaintingConfigs>();
+			if (AllLoadedImages.TryGetValue(indexer, out ImageData imageData))
 			{
-				LoadedImagePaintings[position] = texture;
+				return configs.PlaceholderLoadingTexture ? imageData.GetTexture ?? ModContent.GetTexture("ImagePaintings/LoadingPlaceholder") : imageData.GetTexture;
+			}
+
+			AllLoadedImages.Add(indexer, new ImageData(null));
+			Texture2D image = await Task.Run(() => DirectFetchImage(url, sizeX, sizeY));
+			if (image is null)
+			{
+				return configs.PlaceholderLoadingTexture ? ModContent.GetTexture("ImagePaintings/LoadingPlaceholder") : null;
 			}
 			else
 			{
-				LoadedImagePaintings.Add(position, texture);
+				AllLoadedImages[indexer] = new ImageData(image);
+				return image;
 			}
 		}
 
-		public static Texture2D GetTextureFromURL(string URL, int Scale)
+		public static Texture2D DirectFetchImage(string url, int sizeX, int sizeY)
 		{
-			Texture2D texture = ModContent.GetTexture("ImagePaintings/BruhCat");
-
-			if (Scale <= 0)
+			if (!PingGoogle())
 			{
-				string ErrorText = "Image dimensions cannot be Zero or Negative!";
-				if (Main.dedServ)
-				{
-					NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(ErrorText), Microsoft.Xna.Framework.Color.Red); ;
-				}
-				else
-				{
-					Main.NewText(ErrorText, Microsoft.Xna.Framework.Color.Red);
-				}
-				return texture;
+				Main.NewText("Client appears to be offline...");
+				return null;
 			}
 
-			if (Scale > 50)
+			try
 			{
-				string ErrorText = "Those dimensions are a bit too large";
-				if (Main.dedServ)
-				{
-					NetMessage.BroadcastChatMessage(NetworkText.FromLiteral(ErrorText), Microsoft.Xna.Framework.Color.Red); ;
-				}
-				else
-				{
-					Main.NewText(ErrorText, Microsoft.Xna.Framework.Color.Red);
-				}
-				return texture;
-			}
+				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 
-			ServicePointManager.Expect100Continue = true;
-			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
-			WebClient GetImage = new WebClient();
-			Stream stream = GetImage.OpenRead(URL);
-			if (!(stream is MemoryStream))
-			{
-				MemoryStream memoryStream = new MemoryStream();
-				stream.CopyTo(memoryStream);
-				memoryStream.Position = 0L;
-				stream = memoryStream;
+				using (WebClient getImage = new WebClient())
+				{
+					using (MemoryStream memoryStream = new MemoryStream())
+					{
+						getImage.OpenRead(url).CopyTo(memoryStream);
+						memoryStream.Position = 0;
+
+						return Texture2D.FromStream(Main.instance.GraphicsDevice, memoryStream, sizeX * 16, sizeY * 16, false);
+					}
+				}
 			}
-			texture = Texture2D.FromStream(Main.instance.GraphicsDevice, stream, Scale * 16, Scale * 16, false);
-			return texture;
+			catch (Exception exception)
+			{
+				Mod.Logger.Error(exception);
+				Main.NewText("An error seems to have occured when fetching the image from the given URL.");
+				Main.NewText("Please check your logs for more details.");
+			}
+			return null;
+		}
+
+		public override void Load() => IL.Terraria.Main.DrawTiles += PatchDrawPreview;
+
+		private void PatchDrawPreview(ILContext il)
+		{
+			ILCursor cursor = new ILCursor(il);
+			ILLabel skipNormalCall = cursor.DefineLabel();
+			ILLabel skipPaintingCall = cursor.DefineLabel();
+			if (!cursor.TryGotoNext(i => i.MatchLdsfld<Main>("spriteBatch"), i => i.MatchLdsfld<TileObject>("objectPreview"), i => i.MatchLdsfld<Main>("screenPosition")))
+			{
+				Logger.Error("Failed to find first DrawPreview patch target.");
+				return;
+			}
+			cursor.EmitDelegate<Func<bool>>(() =>
+			{
+				Item heldItem = Main.mouseItem.IsAir ? Main.LocalPlayer.HeldItem : Main.mouseItem;
+				return heldItem.type == ModContent.ItemType<ImagePainting>();
+			});
+			cursor.Emit(OpCodes.Brfalse, skipPaintingCall);
+			cursor.EmitDelegate<Action>(() =>
+			{
+				Player player = Main.LocalPlayer;
+				Item heldItem = Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
+				if (heldItem.type != ModContent.ItemType<ImagePainting>())
+				{
+					return;
+				}
+
+				ImagePainting imagePainting = heldItem.modItem as ImagePainting;
+				Color drawColor = imagePainting.CanUseItem(player) ? Color.White * 0.5f : Color.Red * 0.35f;
+
+				Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
+				Vector2 drawOffset = Main.screenPosition - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
+				int x = (int)(mouseTilePosition.X * 16f - drawOffset.X);
+				int y = (int)(mouseTilePosition.Y * 16f - drawOffset.Y);
+				Task<Texture2D> imagePaintingTask = FetchImage(imagePainting.URL, imagePainting.Size.X, imagePainting.Size.Y);
+				if (imagePaintingTask.IsCompleted && imagePaintingTask.Result != null)
+				{
+					Main.spriteBatch.Draw(imagePaintingTask.Result, new Rectangle(x, y, imagePainting.Size.X * 16, imagePainting.Size.Y * 16), drawColor);
+				}
+			});
+			cursor.Emit(OpCodes.Br, skipNormalCall);
+			cursor.MarkLabel(skipPaintingCall);
+
+			if (!cursor.TryGotoNext(i => i.MatchLdarg(1)))
+			{
+				Logger.Error("Failed to find second DrawPreview patch target.");
+				return;
+			}
+			cursor.MarkLabel(skipNormalCall);
 		}
 
 		public override void HandlePacket(BinaryReader reader, int whoAmI)
@@ -95,44 +153,28 @@ namespace ImagePaintings
 			{
 				case MessageType.CreatePainting:
 					{
-						Vector2 Origin = reader.ReadVector2();
-						int PlayerWhoAmI = reader.ReadInt32();
-						if (Main.player[PlayerWhoAmI].active)
-						{
-							ImagePainting.CreatePainting(Origin.ToPoint(), PlayerWhoAmI, reader.ReadInt32());
-						}
-					}
-					break;
-
-				case MessageType.UpdateImageData:
-					{
-						Vector2 value = reader.ReadVector2();
-						if (Main.netMode == NetmodeID.Server)
-						{
-							return;
-						}
-						CanvasTE canvas = TileEntity.ByPosition[new Point16((int)value.X, (int)value.Y)] as CanvasTE;
-						ImagePaintings mod = ModContent.GetInstance<ImagePaintings>();
-						Point16 pos = value.ToPoint16();
-						Texture2D image = GetTextureFromURL(canvas.ImageURL, (int)Math.Max(canvas.ImageDimensions.X, canvas.ImageDimensions.Y));
-						if (mod.LoadedImagePaintings.ContainsKey(pos))
-						{
-							mod.LoadedImagePaintings[pos] = image;
-						}
-						else
-						{
-							mod.LoadedImagePaintings.Add(pos, image);
-						}
+						Point16 position = reader.ReadVector2().ToPoint16();
+						string url = reader.ReadString();
+						Vector2 size = reader.ReadVector2();
+						ImagePaintingTile.PlacePainting(position.X, position.Y, url, size.ToPoint());
 					}
 					break;
 
 				case MessageType.KillPainting:
 					{
-						Vector2 Position = reader.ReadVector2();
-						if (TileEntity.ByPosition.ContainsKey(Position.ToPoint16()))
+						byte sender = reader.ReadByte();
+						Point16 position = reader.ReadVector2().ToPoint16();
+						Point16 size = reader.ReadVector2().ToPoint16();
+						ImagePaintingTile.KillPainting(new Rectangle(position.X, position.Y, size.X, size.Y));
+
+						if (Main.netMode == NetmodeID.Server)
 						{
-							CanvasTE canvas = TileEntity.ByPosition[new Point16((int)Position.X, (int)Position.Y)] as CanvasTE;
-							DeleteImagePainting(canvas);
+							ModPacket packet = GetPacket();
+							packet.Write((byte)MessageType.KillPainting);
+							packet.Write(sender);
+							packet.WriteVector2(position.ToVector2());
+							packet.WriteVector2(size.ToVector2());
+							packet.Send(-1, sender);
 						}
 					}
 					break;
@@ -143,48 +185,20 @@ namespace ImagePaintings
 			}
 		}
 
-		public static void DeleteImagePainting(CanvasTE te)
+		public override void PostUpdateEverything()
 		{
-			for (int X = te.Position.X; X < te.Position.X + te.ImageDimensions.X; X++)
+			foreach (ImageIndex imageIndex in AllLoadedImages.Keys)
 			{
-				for (int Y = te.Position.Y; Y < te.Position.Y + te.ImageDimensions.Y; Y++)
+				if (AllLoadedImages.TryGetValue(imageIndex, out ImageData imageData))
 				{
-					if (X <= 0 || X >= Main.maxTilesX || Y <= 0 || Y >= Main.maxTilesY)
+					if (ModContent.GetInstance<ImagePaintingConfigs>().LowMemoryMode || imageData.Texture == null)
 					{
-						continue;
+						imageData.TimeSinceLastUse += 1;
 					}
-
-					Tile tile = Framing.GetTileSafely(X, Y);
-					if ((tile.type == ModContent.TileType<BlankCanvas>() || tile.type == ModContent.TileType<NewCanvas>()) && tile.active())
-					{
-						tile.active(false);
-						tile.halfBrick(false);
-						tile.frameX = -1;
-						tile.frameY = -1;
-						tile.color(0);
-						tile.frameNumber(0);
-						tile.type = 0;
-						tile.inActive(false);
-					}
-
-					NetMessage.SendTileRange(-1, X, Y, 1, 1, TileChangeType.None);
 				}
 			}
 
-			ModContent.GetInstance<CanvasTE>().Kill(te.Position.X, te.Position.Y);
-		}
-
-		public override void Unload()
-		{
-			LoadedImagePaintings = null;
-		}
-
-		public override void PostUpdateEverything()
-		{
-			if (Main.netMode == NetmodeID.Server)
-			{
-				return;
-			}
+			AllLoadedImages = AllLoadedImages.Where(indexDataValue => indexDataValue.Value.TimeSinceLastUse <= 300).ToDictionary(index => index.Key, data => data.Value);
 		}
 	}
 }

@@ -1,9 +1,9 @@
-displayName = Image Paintings
+displayName = Image Paintings ( Backwards Incompatible )
 author = Smug
-version = 1.1
-homepage = https://forums.terraria.org/index.php?threads/image-paintings.100791/
-hideCode = true
-hideResources = true
+version = 1.2
+homepage = https://discord.gg/xKgvBTc
+hideCode = false
+hideResources = false
 includeSource = false
 buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*
 includePDB = false
