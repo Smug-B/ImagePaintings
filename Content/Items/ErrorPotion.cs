@@ -1,3 +1,4 @@
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,28 +14,27 @@ namespace ImagePaintings.Content.Items
 
         public override void SetDefaults()
         {
-            item.width = 20;
-            item.height = 30;
+            Item.width = 20;
+            Item.height = 30;
 
-            item.useStyle = ItemUseStyleID.EatingUsing;
-            item.useAnimation = 15;
-            item.useTime = 15;
-            item.useTurn = true;
-            item.UseSound = SoundID.Item3;
+            Item.useStyle = ItemUseStyleID.EatFood;
+            Item.useAnimation = 15;
+            Item.useTime = 15;
+            Item.useTurn = true;
+            Item.UseSound = SoundID.Item3;
 
-            item.maxStack = 30;
-            item.consumable = true;
-            item.buffType = ModContent.BuffType<Buffs.ErrorSight>();
-            item.buffTime = 18000;
+            Item.maxStack = 30;
+            Item.consumable = true;
+            Item.buffType = ModContent.BuffType<Buffs.ErrorSight>();
+            Item.buffTime = 18000;
         }
 
         public override void AddRecipes()
         {
-            ModRecipe recipe = new ModRecipe(mod);
+            Recipe recipe = CreateRecipe();
             recipe.AddIngredient(ModContent.ItemType<ImagePainting>());
-            recipe.needWater = true;
-            recipe.SetResult(this);
-            recipe.AddRecipe();
+            recipe.HasCondition(Recipe.Condition.NearWater);
+            recipe.Register();
         }
     }
 }

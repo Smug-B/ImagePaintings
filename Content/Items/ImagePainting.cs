@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
-using System.Threading.Tasks;
 using ImagePaintings.Content.Tiles;
 using Terraria.ModLoader.IO;
 using System.IO;
@@ -16,7 +15,7 @@ namespace ImagePaintings.Content.Items
 {
 	public class ImagePainting : ModItem
 	{
-		public override bool CloneNewInstances => true;
+		protected override bool CloneNewInstances => true;
 
 		public string URL { get; private set; }
 
@@ -36,18 +35,18 @@ namespace ImagePaintings.Content.Items
 
 		public override void SetDefaults()
 		{
-			item.width = 48;
-			item.height = 34;
+			Item.width = 48;
+			Item.height = 34;
 
-			item.consumable = true;
+			Item.consumable = true;
 
-			item.useAnimation = 15;
-			item.useTime = 15;
-			item.useStyle = ItemUseStyleID.SwingThrow;
-			item.useTurn = true;
-			item.autoReuse = true;
+			Item.useAnimation = 15;
+			Item.useTime = 15;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.useTurn = true;
+			Item.autoReuse = true;
 
-			item.createTile = ModContent.TileType<ImagePaintingTile>();
+			Item.createTile = ModContent.TileType<ImagePaintingTile>();
 		}
 
 		public override bool CanUseItem(Player player)
@@ -63,7 +62,7 @@ namespace ImagePaintings.Content.Items
 					}
 
 					Tile tile = Framing.GetTileSafely(x, y);
-					if (tile.active() || tile.wall <= 0)
+					if (tile.HasTile || tile.WallType <= 0)
 					{
 						return false;
 					}
@@ -74,12 +73,12 @@ namespace ImagePaintings.Content.Items
 
 		public override void ModifyTooltips(List<TooltipLine> tooltips)
 		{
-			tooltips.Add(new TooltipLine(mod, "URL", "URL: " + (string.IsNullOrEmpty(URL) ? "Hmm... This painting appears to be missing a designated URL." : URL)));
-			tooltips.Add(new TooltipLine(mod, "Size", "Dimensions: " + Size.X + " blocks wide, " + Size.Y + " blocks tall"));
+			tooltips.Add(new TooltipLine(Mod, "URL", "URL: " + (string.IsNullOrEmpty(URL) ? "Hmm... This painting appears to be missing a designated URL." : URL)));
+			tooltips.Add(new TooltipLine(Mod, "Size", "Dimensions: " + Size.X + " blocks wide, " + Size.Y + " blocks tall"));
 
 			if (!Main.keyState.IsKeyDown(Keys.LeftShift))
 			{
-				tooltips.Add(new TooltipLine(mod, "QOL", "Press Left Shift and preview the image."));
+				tooltips.Add(new TooltipLine(Mod, "QOL", "Press Left Shift and preview the image."));
 			}
 		}
 
@@ -92,26 +91,29 @@ namespace ImagePaintings.Content.Items
 				return;
 			}
 
-			Task<Texture2D> imagePaintingTask = ImagePaintings.FetchImage(URL, Size.X, Size.Y);
-			if (imagePaintingTask.IsCompleted && imagePaintingTask.Result != null)
+			Texture2D image = ImagePaintings.FetchImage(URL, Size.X, Size.Y);
+			if (image != null)
 			{
-				Vector2 drawPosition = new Vector2(lastTooltipLine.X, lastTooltipLine.Y) + new Vector2(0, lastTooltipLine.font.MeasureString(lastTooltipLine.text).Y * lastTooltipLine.baseScale.Y);
-				Rectangle destinationRectangle = new Rectangle((int)drawPosition.X, (int)drawPosition.Y, 320, 320);
-				Main.spriteBatch.Draw(imagePaintingTask.Result, destinationRectangle, Color.White);
+				Vector2 drawPosition = new Vector2(lastTooltipLine.X, lastTooltipLine.Y) + new Vector2(0, lastTooltipLine.Font.MeasureString(lastTooltipLine.Text).Y * lastTooltipLine.BaseScale.Y);
+				bool widthGreaterThanHeight = image.Width >= image.Height;
+				float widthHeightRatio = (float)image.Width / image.Height;
+				float heightWidthRatio = (float)image.Height / image.Width;
+				int maxDisplaySize = 320;
+				int width = widthGreaterThanHeight ? maxDisplaySize : (int)(maxDisplaySize * widthHeightRatio);
+				int height = widthGreaterThanHeight ? (int)(maxDisplaySize * heightWidthRatio) : maxDisplaySize;
+				Rectangle destinationRectangle = new Rectangle((int)drawPosition.X, (int)drawPosition.Y, width, height);
+				Main.spriteBatch.Draw(image, destinationRectangle, Color.White);
 			}
 		}
 
-		public override TagCompound Save()
+		public override void SaveData(TagCompound tag)
 		{
-			return new TagCompound
-			{
-				{ "URL", URL },
-				{ "SizeX", Size.X },
-				{ "SizeY", Size.Y }
-			};
+			tag.Add("URL", URL);
+			tag.Add("SizeX", Size.X);
+			tag.Add("SizeY", Size.Y);
 		}
 
-		public override void Load(TagCompound tag)
+		public override void LoadData(TagCompound tag)
 		{
 			URL = tag.Get<string>("URL");
 			Size = new Point(tag.Get<int>("SizeX"), tag.Get<int>("SizeY"));
@@ -124,7 +126,7 @@ namespace ImagePaintings.Content.Items
 			writer.Write(Size.Y);
 		}
 
-		public override void NetRecieve(BinaryReader reader)
+		public override void NetReceive(BinaryReader reader)
 		{
 			URL = reader.ReadString();
 			Size = new Point(reader.ReadInt32(), reader.ReadInt32());

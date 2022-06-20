@@ -1,15 +1,6 @@
 This mod allows the creation of paintings which depicts images from a given URL.
 
-For more information please visit the homepage.
+For more information please visit the homepage or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
-Update v1.2
-Cleaned up codebase
-Loading is now asynchronous, your game won't freeze upon loading images
-Added a preview feature for your image paintings instead of relying on url memorization
-Added a place preview feature that is standard in vanilla paintings
-Added configs that allow players to switch lighting mode for more accurate lighting
-
-Update v1.1:
-Fixed issue preventing 64 bit support
-Fixed loading issue on larger images when moving away
-Improved performance when loading images
+Update v1.0
+- Ported to 1.4

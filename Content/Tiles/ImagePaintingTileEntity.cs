@@ -45,35 +45,32 @@ namespace ImagePaintings.Content.Tiles
 			return null;
 		}
 
-		public override bool ValidTile(int i, int j)
+		public override bool IsTileValidForEntity(int i, int j)
 		{
 			Tile tile = Framing.GetTileSafely(i, j);
-			return tile.active() && tile.type == ModContent.TileType<ImagePaintingTile>();
+			return tile.HasTile && tile.TileType == ModContent.TileType<ImagePaintingTile>();
 		}
 
-		public override TagCompound Save()
+		public override void SaveData(TagCompound tag)
 		{
-			return new TagCompound
-			{
-				{ "URL", URL },
-				{ "SizeX", Size.X },
-				{ "SizeY", Size.Y }
-			};
+			tag.Add("URL", URL);
+			tag.Add("SizeX", Size.X);
+			tag.Add("SizeY", Size.Y);
 		}
 
-		public override void Load(TagCompound tag) => SetData(tag.Get<string>("URL"), new Point(tag.Get<int>("SizeX"), tag.Get<int>("SizeY")));
+		public override void LoadData(TagCompound tag) => SetData(tag.Get<string>("URL"), new Point(tag.Get<int>("SizeX"), tag.Get<int>("SizeY")));
 
-		public override void NetSend(BinaryWriter writer, bool lightSend)
+        public override void NetSend(BinaryWriter writer)
 		{
 			writer.Write(URL);
 			writer.Write(Size.X);
 			writer.Write(Size.Y);
 		}
 
-		public override void NetReceive(BinaryReader reader, bool lightReceive) => SetData(reader.ReadString(), new Point(reader.ReadInt32(), reader.ReadInt32()));
+		public override void NetReceive(BinaryReader reader) => SetData(reader.ReadString(), new Point(reader.ReadInt32(), reader.ReadInt32()));
 
-		public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction)
-		{
+        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
+        {
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				NetMessage.SendTileSquare(Main.myPlayer, i, j, 1);

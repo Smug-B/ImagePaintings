@@ -1,7 +1,7 @@
-displayName = Image Paintings ( Backwards Incompatible )
+displayName = Image Paintings
 author = Smug
-version = 1.2
-homepage = https://discord.gg/xKgvBTc
+version = 1.0
+homepage = https://github.com/SmugBlanco/ImagePaintings
 hideCode = false
 hideResources = false
 includeSource = false

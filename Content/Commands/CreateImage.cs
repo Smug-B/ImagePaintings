@@ -42,8 +42,8 @@ namespace ImagePaintings.Content.Commands
 				return;
 			}
 
-			int imageIndex = Item.NewItem(caller.Player.getRect(), ModContent.ItemType<ImagePainting>());
-			ImagePainting generatedPainting = Main.item[imageIndex].modItem as ImagePainting;
+			int imageIndex = Item.NewItem(Item.GetSource_None(), caller.Player.getRect(), ModContent.ItemType<ImagePainting>());
+			ImagePainting generatedPainting = Main.item[imageIndex].ModItem as ImagePainting;
 			generatedPainting.SetData(args[0], new Point(sizeX, sizeY));
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{

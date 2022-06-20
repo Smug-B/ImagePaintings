@@ -4,12 +4,6 @@ namespace ImagePaintings
 {
 	public struct ImageData
 	{
-		public ImageData(Texture2D texture)
-		{
-			Texture = texture;
-			TimeSinceLastUse = 0;
-		}
-
 		public Texture2D Texture;
 
 		public int TimeSinceLastUse;
@@ -21,6 +15,12 @@ namespace ImagePaintings
 				TimeSinceLastUse = 0;
 				return Texture;
 			}
+		}
+
+		public ImageData(Texture2D texture)
+		{
+			Texture = texture;
+			TimeSinceLastUse = 0;
 		}
 	}
 }
