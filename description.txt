@@ -1,6 +1,20 @@
 This mod allows the creation of paintings which depicts images from a given URL.
 
-For more information please visit the homepage or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
+Players will be able to access these image paintings through the /painting command which functions as follows:
+/painting <URL> <Width> <Height>
+<URL>: An URL that links to an image
+<Width>: A number specifying the width of the painting ( in blocks )
+<Height> A number specifying the height of the painting ( in blocks )
+
+An example of proper command usage would be: /painting https://i.imgur.com/o0xw022.jpeg 12 5
+
+For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.1
+- Fixed issue where image would be cropped instead of stretched, for best results use width and heights proportional to the image dimensions
+- Not horrendous description
 
 Update v1.0
 - Ported to 1.4

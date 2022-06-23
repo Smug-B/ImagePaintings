@@ -167,9 +167,14 @@ namespace ImagePaintings.Content.Tiles
 					Texture2D image = FetchImage(imagePaintingTileEntity.URL, imagePaintingTileEntity.Size.X, imagePaintingTileEntity.Size.Y);
 					if (image != null)
 					{
-						int x = (int)(imagePaintingTileEntity.WorldPosition.X - drawOffset.X + currentTile.TileFrameX);
-						int y = (int)(imagePaintingTileEntity.WorldPosition.Y - drawOffset.Y + currentTile.TileFrameY);
-						spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), new Rectangle(currentTile.TileFrameX, currentTile.TileFrameY, 16, 16), Lighting.GetColor(i, j));
+						int x = (int)(i * 16 - drawOffset.X);
+						int y = (int)(j * 16 - drawOffset.Y);
+						float sourceWidth = image.Width / (float)imagePaintingTileEntity.Size.X;
+						float widthScale = sourceWidth / 16f;
+						float sourceHeight = image.Height / (float)imagePaintingTileEntity.Size.Y;
+						float heightScale = sourceHeight / 16f;
+						Rectangle sourceRect = new Rectangle((int)(currentTile.TileFrameX * widthScale), (int)(currentTile.TileFrameY * heightScale), (int)sourceWidth, (int)sourceHeight);
+						spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, Lighting.GetColor(i, j));
 					}
 				}
 			}
