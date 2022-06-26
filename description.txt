@@ -12,6 +12,9 @@ For more information please visit the homepage, https://github.com/SmugBlanco/Im
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Update v1.2
+- Prevented loading of URLs that don't end in .png, .jpeg, or .jpg. For most people, this should be inconsequential.
+
 Update v1.1
 - Fixed issue where image would be cropped instead of stretched, for best results use width and heights proportional to the image dimensions
 - Not horrendous description

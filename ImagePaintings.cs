@@ -106,6 +106,12 @@ namespace ImagePaintings
 				return null;
 			}
 
+			if (!url.EndsWith(".png") && !url.EndsWith(".jpeg") && !url.EndsWith(".jpg"))
+            {
+				Main.NewText("Unfortunately, image paintings currently only supports the common image formats of PNGs and JPEGs");
+				return null;
+			}
+
 			try
 			{
 				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.SystemDefault;
