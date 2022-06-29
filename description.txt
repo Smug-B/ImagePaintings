@@ -12,7 +12,7 @@ Players will be able to access these image paintings through the /painting comma
 An example of the default proper command usage would be: /painting https://i.imgur.com/o0xw022.jpeg 12 5
 Another example of proper command usage would be: /painting https://c.tenor.com/7YbmXq_ixXIAAAAd/zhukov.gif 20 12 3 200 120
 
-NOTICE: With regards to GIFs
+NOTICE: In regards to GIFs
 1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
 2) They are very memory intensive! Do not play attempt to play God unless you have sufficent amount of memory to use.
 3) For those wishing not to load GIFs, there is the new GIF config setting. GIFs will only load their first frame if the setting is disabled.
@@ -23,6 +23,9 @@ NOTICE: Bug reports are appreciated! You can do so through making an issue throu
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.4
+- Added config options to modify the initial connectivity tests when loading images. These may resolve your client appears to be offline issues...
 
 Update v1.3
 - Paintings now support GIFs ( Windows only )

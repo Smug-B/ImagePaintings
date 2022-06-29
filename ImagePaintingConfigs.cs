@@ -32,9 +32,34 @@ namespace ImagePaintings
 		[BackgroundColor(200, 170, 130)]
 		[DefaultValue(true)]
 		[Label("GIFs")]
-		[Tooltip("Determines whether or not GIFs are properly loaded. " 
+		[Tooltip("Determines whether or not GIFs are properly loaded." 
 			+ "\nIf this is disabled only the first frame of the GIF would be loaded."
 			+ "\nSuggested for very low end PCs")]
 		public bool GIFs;
+
+		[BackgroundColor(200, 170, 130)]
+		[DefaultValue(1000)]
+		[Range(1000, 100000)]
+		[Increment(500)]
+		[Label("Ping Response Timeout")]
+		[Tooltip("Determines the timeout on the standard connectivity test in milliseconds."
+			+"\nNote: 1,000 milliseconds = 1 second")]
+		public int PingResponseTimeout;
+
+		[BackgroundColor(200, 170, 130)]
+		[DefaultValue(false)]
+		[Label("Alternative Online Test")]
+		[Tooltip("Utilises an alternate connectivity test."
+			+ "\nUseful in cases where the default option fails to adequately check for connectivity."
+			+ "\nIt's suggested that, before using this option, make sure that your firewall or network are not blocking ping attempts.")]
+		public bool AlternativeOnlineTest;
+
+		[BackgroundColor(200, 170, 130)]
+		[DefaultValue(false)]
+		[Label("Disable Online Test")]
+		[Tooltip("Disables the online test done before attempting to pull images."
+			+ "\nUseful in circumstances where all other options fail despite you being connected to the internet."
+			+ "\nNOTICE: If you are offline, and the image request connection fails, this may or may not crash your game.")]
+		public bool DisableOnlineTest;
 	}
 }

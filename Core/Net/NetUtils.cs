@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.NetworkInformation;
 using Terraria;
+using Terraria.ModLoader;
 
 namespace ImagePaintings.Core.Net
 {
@@ -15,16 +17,43 @@ namespace ImagePaintings.Core.Net
         /// </summary>
         /// <param name="timeOut">Verbatim. Defaults to 1000 ( 1 second )</param>
         /// <returns>Whether or not the user is online.</returns>
-		public static bool Online(int timeOut = 1000, bool includeChatText = false)
-		{
-            using Ping ping = new Ping();
-            PingReply reply = ping.Send(Google, timeOut);
-            bool result = reply != null && reply.Status == IPStatus.Success;
-            if (includeChatText && !result)
+		public static bool Online(bool includeChatText = false)
+        {
+            ImagePaintingConfigs imagePaintingConfigs = ModContent.GetInstance<ImagePaintingConfigs>();
+
+            if (imagePaintingConfigs.DisableOnlineTest)
             {
-                Main.NewText("Failed to load images as the client appears to be offline...");
+                return true;
             }
-            return result;
+
+            int timeOut = imagePaintingConfigs.PingResponseTimeout;
+            if (imagePaintingConfigs.AlternativeOnlineTest)
+            {
+                try
+                {
+                    HttpWebRequest request = WebRequest.Create(new Uri("https://www.google.com/")) as HttpWebRequest;
+                    request.KeepAlive = false;
+                    request.Timeout = timeOut;
+                    using WebResponse response = request.GetResponse();
+                    return true;
+                }
+                catch
+                {
+                    Main.NewText("Failed to load images as the client appears to be offline...");
+                    return false;
+                }
+            }
+            else
+            {
+                using Ping ping = new Ping();
+                PingReply reply = ping.Send(Google, timeOut);
+                bool result = reply != null && reply.Status == IPStatus.Success;
+                if (includeChatText && !result)
+                {
+                    Main.NewText("Failed to load images as the client appears to be offline...");
+                }
+                return result;
+            }
         }
 	}
 }
