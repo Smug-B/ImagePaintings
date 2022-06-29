@@ -10,9 +10,7 @@ namespace ImagePaintings.Content.Tiles
 {
 	public class ImagePaintingTileEntity : ModTileEntity
 	{
-		public string URL { get; private set; }
-
-		public Point Size { get; private set; }
+		public ImageIndex ImageIndex { get; private set; }
 
 		public Vector2 WorldPosition { get; private set; }
 
@@ -20,13 +18,12 @@ namespace ImagePaintings.Content.Tiles
 
 		public Rectangle Hitbox { get; private set; }
 
-		public void SetData(string url, Point size)
+		public void SetData(ImageIndex imageIndex)
 		{
-			URL = url;
-			Size = size;
+			ImageIndex = imageIndex;
 			WorldPosition = Position.ToWorldCoordinates(0, 0);
-			WorldSize = new Point(Size.X * 16, Size.Y * 16);
-			Hitbox = new Rectangle(Position.X, Position.Y, Size.X, Size.Y);
+			WorldSize = new Point(ImageIndex.SizeX * 16, ImageIndex.SizeY * 16);
+			Hitbox = new Rectangle(Position.X, Position.Y, ImageIndex.SizeX, ImageIndex.SizeY);
 		}
 
 		public static ImagePaintingTileEntity FetchTileEntity(Point position)
@@ -51,25 +48,30 @@ namespace ImagePaintings.Content.Tiles
 			return tile.HasTile && tile.TileType == ModContent.TileType<ImagePaintingTile>();
 		}
 
-		public override void SaveData(TagCompound tag)
+		public override void SaveData(TagCompound tag) => tag.Add("Index", ImageIndex.Save());
+
+		public override void LoadData(TagCompound tag)
 		{
-			tag.Add("URL", URL);
-			tag.Add("SizeX", Size.X);
-			tag.Add("SizeY", Size.Y);
+			if (tag.ContainsKey("URL"))
+			{
+				SetData(new ImageIndex(tag.Get<string>("URL"), tag.Get<int>("SizeX"), tag.Get<int>("SizeY")));
+			}
+			else
+            {
+				SetData(ImageIndex.Load(tag.Get<TagCompound>("Index")));
+            }
 		}
 
-		public override void LoadData(TagCompound tag) => SetData(tag.Get<string>("URL"), new Point(tag.Get<int>("SizeX"), tag.Get<int>("SizeY")));
+		public override void NetSend(BinaryWriter writer) => ImageIndex.NetSend(writer);
 
-        public override void NetSend(BinaryWriter writer)
+		public override void NetReceive(BinaryReader reader)
 		{
-			writer.Write(URL);
-			writer.Write(Size.X);
-			writer.Write(Size.Y);
+			ImageIndex imageIndex = new ImageIndex();
+			imageIndex.NetReceive(reader);
+			SetData(imageIndex);
 		}
 
-		public override void NetReceive(BinaryReader reader) => SetData(reader.ReadString(), new Point(reader.ReadInt32(), reader.ReadInt32()));
-
-        public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
+		public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)
         {
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{

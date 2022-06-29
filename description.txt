@@ -1,16 +1,32 @@
 This mod allows the creation of paintings which depicts images from a given URL.
 
 Players will be able to access these image paintings through the /painting command which functions as follows:
-/painting <URL> <Width> <Height>
+/painting <URL> <Width> <Height> <OPTIONAL: Frame Duration> <OPTIONAL: Resolution Size X> <OPTIONAL: Resolution Size Y>
 <URL>: An URL that links to an image
 <Width>: A number specifying the width of the painting ( in blocks )
-<Height> A number specifying the height of the painting ( in blocks )
+<Height>: A number specifying the height of the painting ( in blocks )
+<OPTIONAL: Frame Duration>: An optional parameter specifying how long, in ticks ( 1 / 60th of a second ), should each frame of a GIF be played. Defaults to 5 and does nothing on normal paintings.
+<OPTIONAL: Resolution Size X>: An optional parameter specifying the resolution ( X ) of the image displayed, useful for reducing reducing the quality of a painting thereby saving memory
+<OPTIONAL: Resolution Size Y>: An optional parameter specifying the resolution ( Y ) of the image displayed, useful for reducing reducing the quality of a painting thereby saving memory
 
-An example of proper command usage would be: /painting https://i.imgur.com/o0xw022.jpeg 12 5
+An example of the default proper command usage would be: /painting https://i.imgur.com/o0xw022.jpeg 12 5
+Another example of proper command usage would be: /painting https://c.tenor.com/7YbmXq_ixXIAAAAd/zhukov.gif 20 12 3 200 120
+
+NOTICE: With regards to GIFs
+1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
+2) They are very memory intensive! Do not play attempt to play God unless you have sufficent amount of memory to use.
+3) For those wishing not to load GIFs, there is the new GIF config setting. GIFs will only load their first frame if the setting is disabled.
+
+NOTICE: Bug reports are appreciated! You can do so through making an issue through github, or informing me through discord.
 
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.3
+- Paintings now support GIFs ( Windows only )
+- Improvements in async loading of images
+- Internal changes
 
 Update v1.2
 - Prevented loading of URLs that don't end in .png, .jpeg, or .jpg. For most people, this should be inconsequential.

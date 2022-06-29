@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using ImagePaintings.Core.Graphics;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria.ModLoader;
 
 namespace ImagePaintings
@@ -12,16 +14,43 @@ namespace ImagePaintings
 			{
 				if (ImagePaintings.AllLoadedImages.TryGetValue(imageIndex, out ImageData imageData))
 				{
-					if (usingLowMemory || imageData.Texture == null)
-					{
-						imageData.TimeSinceLastUse++;
-					}
+					imageData?.Update();
 				}
 			}
 
-			if (usingLowMemory)
+			/*if (usingLowMemory)
 			{
-				ImagePaintings.AllLoadedImages = ImagePaintings.AllLoadedImages.Where(indexDataValue => indexDataValue.Value.TimeSinceLastUse <= 300).ToDictionary(index => index.Key, data => data.Value);
+				IList<KeyValuePair<ImageIndex, ImageData>> validPaintings = new List<KeyValuePair<ImageIndex, ImageData>>();
+				foreach (KeyValuePair<ImageIndex, ImageData> data in ImagePaintings.AllLoadedImages)
+                {
+					if (data.Value != null)
+                    {
+						if (data.Value.TimeSinceLastUse <= 300)
+                        {
+							validPaintings.Add(data);
+                        }
+						else
+                        {
+							data.Value.Unload();
+							validPaintings.Add(new KeyValuePair<ImageIndex, ImageData>(data.Key, null));
+						}
+                    }
+                }
+
+				ImagePaintings.AllLoadedImages = validPaintings.ToDictionary(index => index.Key, data => data.Value);
+			}*/
+		}
+
+        public override void PreSaveAndQuit()
+        {
+			if (ImagePaintings.AllLoadedImages != null)
+			{
+				foreach (KeyValuePair<ImageIndex, ImageData> data in ImagePaintings.AllLoadedImages)
+				{
+					data.Value.Unload();
+				}
+
+				ImagePaintings.AllLoadedImages.Clear();
 			}
 		}
     }

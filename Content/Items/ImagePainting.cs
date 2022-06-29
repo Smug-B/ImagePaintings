@@ -17,15 +17,7 @@ namespace ImagePaintings.Content.Items
 	{
 		protected override bool CloneNewInstances => true;
 
-		public string URL { get; private set; }
-
-		public Point Size { get; private set; }
-
-		public void SetData(string url, Point size)
-		{
-			URL = url;
-			Size = size;
-		}
+		public ImageIndex ImageIndex;
 
 		public override void SetStaticDefaults()
 		{
@@ -52,9 +44,9 @@ namespace ImagePaintings.Content.Items
 		public override bool CanUseItem(Player player)
 		{
 			Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
-			for (int x = mouseTilePosition.X; x < mouseTilePosition.X + Size.X; x++)
+			for (int x = mouseTilePosition.X; x < mouseTilePosition.X + ImageIndex.SizeX; x++)
 			{
-				for (int y = mouseTilePosition.Y; y < mouseTilePosition.Y + Size.Y; y++)
+				for (int y = mouseTilePosition.Y; y < mouseTilePosition.Y + ImageIndex.SizeY; y++)
 				{
 					if (!WorldGen.InWorld(x, y))
 					{
@@ -73,8 +65,9 @@ namespace ImagePaintings.Content.Items
 
 		public override void ModifyTooltips(List<TooltipLine> tooltips)
 		{
-			tooltips.Add(new TooltipLine(Mod, "URL", "URL: " + (string.IsNullOrEmpty(URL) ? "Hmm... This painting appears to be missing a designated URL." : URL)));
-			tooltips.Add(new TooltipLine(Mod, "Size", "Dimensions: " + Size.X + " blocks wide, " + Size.Y + " blocks tall"));
+			tooltips.Add(new TooltipLine(Mod, "URL", "URL: " + (string.IsNullOrEmpty(ImageIndex.URL) ? "Hmm... This painting appears to be missing a designated URL." : ImageIndex.URL)));
+			tooltips.Add(new TooltipLine(Mod, "Size", "Dimensions: " + ImageIndex.SizeX + " blocks wide, " + ImageIndex.SizeY + " blocks tall"));
+			tooltips.Add(new TooltipLine(Mod, "Frame Duration", "Frame Duration: " + ImageIndex.FrameDuration + " ticks, this is only relevant for GIFs"));
 
 			if (!Main.keyState.IsKeyDown(Keys.LeftShift))
 			{
@@ -91,7 +84,7 @@ namespace ImagePaintings.Content.Items
 				return;
 			}
 
-			Texture2D image = ImagePaintings.FetchImage(URL, Size.X, Size.Y);
+			Texture2D image = ImagePaintings.FetchImage(ImageIndex);
 			if (image != null)
 			{
 				Vector2 drawPosition = new Vector2(lastTooltipLine.X, lastTooltipLine.Y) + new Vector2(0, lastTooltipLine.Font.MeasureString(lastTooltipLine.Text).Y * lastTooltipLine.BaseScale.Y);
@@ -106,30 +99,22 @@ namespace ImagePaintings.Content.Items
 			}
 		}
 
-		public override void SaveData(TagCompound tag)
-		{
-			tag.Add("URL", URL);
-			tag.Add("SizeX", Size.X);
-			tag.Add("SizeY", Size.Y);
-		}
+		public override void SaveData(TagCompound tag) => tag.Add("Index", ImageIndex.Save());
 
 		public override void LoadData(TagCompound tag)
 		{
-			URL = tag.Get<string>("URL");
-			Size = new Point(tag.Get<int>("SizeX"), tag.Get<int>("SizeY"));
+			if (tag.ContainsKey("URL"))
+			{
+				ImageIndex = new ImageIndex(tag.Get<string>("URL"), tag.Get<int>("SizeX"), tag.Get<int>("SizeY"));
+            }
+			else
+            {
+				ImageIndex = ImageIndex.Load(tag.Get<TagCompound>("Index"));
+            }
 		}
 
-		public override void NetSend(BinaryWriter writer)
-		{
-			writer.Write(URL);
-			writer.Write(Size.X);
-			writer.Write(Size.Y);
-		}
+		public override void NetSend(BinaryWriter writer) => ImageIndex.NetSend(writer);
 
-		public override void NetReceive(BinaryReader reader)
-		{
-			URL = reader.ReadString();
-			Size = new Point(reader.ReadInt32(), reader.ReadInt32());
-		}
+		public override void NetReceive(BinaryReader reader) => ImageIndex.NetReceive(reader);
 	}
 }
