@@ -16,6 +16,7 @@ NOTICE: With regards to GIFs
 1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
 2) They are very memory intensive! Do not play attempt to play God unless you have sufficent amount of memory to use.
 3) For those wishing not to load GIFs, there is the new GIF config setting. GIFs will only load their first frame if the setting is disabled.
+4) It is highly suggested that you restart your game everytime you save and exit a world.
 
 NOTICE: Bug reports are appreciated! You can do so through making an issue through github, or informing me through discord.
 
