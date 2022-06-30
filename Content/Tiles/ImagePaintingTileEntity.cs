@@ -10,7 +10,7 @@ namespace ImagePaintings.Content.Tiles
 {
 	public class ImagePaintingTileEntity : ModTileEntity
 	{
-		public ImageIndex ImageIndex { get; private set; }
+		public PaintingData PaintingData { get; private set; }
 
 		public Vector2 WorldPosition { get; private set; }
 
@@ -18,12 +18,12 @@ namespace ImagePaintings.Content.Tiles
 
 		public Rectangle Hitbox { get; private set; }
 
-		public void SetData(ImageIndex imageIndex)
+		public void SetData(PaintingData paintingData)
 		{
-			ImageIndex = imageIndex;
+			PaintingData = paintingData;
 			WorldPosition = Position.ToWorldCoordinates(0, 0);
-			WorldSize = new Point(ImageIndex.SizeX * 16, ImageIndex.SizeY * 16);
-			Hitbox = new Rectangle(Position.X, Position.Y, ImageIndex.SizeX, ImageIndex.SizeY);
+			WorldSize = new Point(PaintingData.SizeX * 16, PaintingData.SizeY * 16);
+			Hitbox = new Rectangle(Position.X, Position.Y, PaintingData.SizeX, PaintingData.SizeY);
 		}
 
 		public static ImagePaintingTileEntity FetchTileEntity(Point position)
@@ -48,27 +48,35 @@ namespace ImagePaintings.Content.Tiles
 			return tile.HasTile && tile.TileType == ModContent.TileType<ImagePaintingTile>();
 		}
 
-		public override void SaveData(TagCompound tag) => tag.Add("Index", ImageIndex.Save());
+		public override void SaveData(TagCompound tag) => tag.Add("Data", PaintingData.Save());
 
 		public override void LoadData(TagCompound tag)
 		{
 			if (tag.ContainsKey("URL"))
 			{
-				SetData(new ImageIndex(tag.Get<string>("URL"), tag.Get<int>("SizeX"), tag.Get<int>("SizeY")));
+				int sizeX = tag.Get<int>("SizeX");
+				int sizeY = tag.Get<int>("SizeY");
+				SetData(new PaintingData(new ImageIndex(tag.Get<string>("URL"), sizeX * 16, sizeY * 16), sizeX, sizeY));
+			}
+			else if (tag.ContainsKey("Index"))
+			{
+				ObsoleteImageIndex obsoleteIndex = ObsoleteImageIndex.Load(tag.Get<TagCompound>("Index"));
+				ImageIndex index = new ImageIndex(obsoleteIndex.URL, obsoleteIndex.ResolutionSizeX, obsoleteIndex.ResolutionSizeY);
+				SetData(new PaintingData(index, obsoleteIndex.SizeX, obsoleteIndex.SizeY, obsoleteIndex.FrameDuration));
 			}
 			else
-            {
-				SetData(ImageIndex.Load(tag.Get<TagCompound>("Index")));
-            }
+			{
+				SetData(PaintingData.Load(tag.Get<TagCompound>("Data")));
+			}
 		}
 
-		public override void NetSend(BinaryWriter writer) => ImageIndex.NetSend(writer);
+		public override void NetSend(BinaryWriter writer) => PaintingData.NetSend(writer);
 
 		public override void NetReceive(BinaryReader reader)
 		{
-			ImageIndex imageIndex = new ImageIndex();
-			imageIndex.NetReceive(reader);
-			SetData(imageIndex);
+			PaintingData paintingData = new PaintingData();
+			paintingData.NetReceive(reader);
+			SetData(paintingData);
 		}
 
 		public override int Hook_AfterPlacement(int i, int j, int type, int style, int direction, int alternate)

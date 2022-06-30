@@ -17,10 +17,9 @@ namespace ImagePaintings
 
 		[BackgroundColor(200, 170, 130)]
 		[DefaultValue(true)]
-		[Label("Accurate Lighting")]
-		[Tooltip("Utilises multiple draw calls to get more accurate lighting onto image paintings."
-		+ "\nSlightly less performant than the alternative of a singular light value for all tiles."
-		+ "\nMaybe more memory intensive than the alternative.")]
+		[Label("Per Tile Drawing")]
+		[Tooltip("Draws each tile individually."
+		+ "\nSlightly more cost ineffectively than the alternative.")]
 		public bool AccurateLighting;
 
 		[BackgroundColor(200, 170, 130)]

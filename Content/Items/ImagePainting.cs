@@ -3,26 +3,18 @@ using Terraria.ID;
 using Terraria;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Microsoft.Xna.Framework.Input;
-using ImagePaintings.Content.Tiles;
 using Terraria.ModLoader.IO;
-using System.IO;
+using ImagePaintings.Content.Tiles;
 
 namespace ImagePaintings.Content.Items
 {
-	public class ImagePainting : ModItem
+    public class ImagePainting : PaintingBase
 	{
-		protected override bool CloneNewInstances => true;
-
-		public ImageIndex ImageIndex;
-
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Image Painting");
-			Tooltip.SetDefault("Creates a image in the form of a painting.");
+			DisplayName.SetDefault("Image Painting [ Legacy ]");
+			Tooltip.SetDefault("Creates an image in the form of a painting on valid walled surfaces.");
 		}
 
 		public override void SetDefaults()
@@ -44,9 +36,9 @@ namespace ImagePaintings.Content.Items
 		public override bool CanUseItem(Player player)
 		{
 			Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
-			for (int x = mouseTilePosition.X; x < mouseTilePosition.X + ImageIndex.SizeX; x++)
+			for (int x = mouseTilePosition.X; x < mouseTilePosition.X + PaintingData.SizeX; x++)
 			{
-				for (int y = mouseTilePosition.Y; y < mouseTilePosition.Y + ImageIndex.SizeY; y++)
+				for (int y = mouseTilePosition.Y; y < mouseTilePosition.Y + PaintingData.SizeY; y++)
 				{
 					if (!WorldGen.InWorld(x, y))
 					{
@@ -63,11 +55,13 @@ namespace ImagePaintings.Content.Items
 			return true;
 		}
 
-		public override void ModifyTooltips(List<TooltipLine> tooltips)
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
 		{
-			tooltips.Add(new TooltipLine(Mod, "URL", "URL: " + (string.IsNullOrEmpty(ImageIndex.URL) ? "Hmm... This painting appears to be missing a designated URL." : ImageIndex.URL)));
-			tooltips.Add(new TooltipLine(Mod, "Size", "Dimensions: " + ImageIndex.SizeX + " blocks wide, " + ImageIndex.SizeY + " blocks tall"));
-			tooltips.Add(new TooltipLine(Mod, "Frame Duration", "Frame Duration: " + ImageIndex.FrameDuration + " ticks, this is only relevant for GIFs"));
+			tooltips.Add(new TooltipLine(Mod, "URL", "URL: " + (string.IsNullOrEmpty(PaintingData.ImageIndex.URL) ? "Hmm... This painting appears to be missing a designated URL." : PaintingData.ImageIndex.URL)));
+			tooltips.Add(new TooltipLine(Mod, "Size", "Dimensions: " + PaintingData.SizeX + " blocks wide, " + PaintingData.SizeY + " blocks tall"
+			+ "\nResolution Dimensions: " + PaintingData.ImageIndex.ResolutionSizeX + ", " + PaintingData.ImageIndex.ResolutionSizeY));
+			tooltips.Add(new TooltipLine(Mod, "Frame Duration", "Frame Duration: " + PaintingData.FrameDuration + " ticks, this is only relevant for GIFs"));
+			tooltips.Add(new TooltipLine(Mod, "Brightness", "Brightness: " + PaintingData.Brightness + " ticks, this is only relevant if the value is not -1"));
 
 			if (!Main.keyState.IsKeyDown(Keys.LeftShift))
 			{
@@ -75,46 +69,24 @@ namespace ImagePaintings.Content.Items
 			}
 		}
 
-		public override void PostDrawTooltip(ReadOnlyCollection<DrawableTooltipLine> lines)
-		{
-			DrawableTooltipLine lastTooltipLine = lines.LastOrDefault();
-
-			if (lastTooltipLine == null || !Main.keyState.IsKeyDown(Keys.LeftShift))
-			{
-				return;
-			}
-
-			Texture2D image = ImagePaintings.FetchImage(ImageIndex);
-			if (image != null)
-			{
-				Vector2 drawPosition = new Vector2(lastTooltipLine.X, lastTooltipLine.Y) + new Vector2(0, lastTooltipLine.Font.MeasureString(lastTooltipLine.Text).Y * lastTooltipLine.BaseScale.Y);
-				bool widthGreaterThanHeight = image.Width >= image.Height;
-				float widthHeightRatio = (float)image.Width / image.Height;
-				float heightWidthRatio = (float)image.Height / image.Width;
-				int maxDisplaySize = 320;
-				int width = widthGreaterThanHeight ? maxDisplaySize : (int)(maxDisplaySize * widthHeightRatio);
-				int height = widthGreaterThanHeight ? (int)(maxDisplaySize * heightWidthRatio) : maxDisplaySize;
-				Rectangle destinationRectangle = new Rectangle((int)drawPosition.X, (int)drawPosition.Y, width, height);
-				Main.spriteBatch.Draw(image, destinationRectangle, Color.White);
-			}
-		}
-
-		public override void SaveData(TagCompound tag) => tag.Add("Index", ImageIndex.Save());
-
 		public override void LoadData(TagCompound tag)
 		{
 			if (tag.ContainsKey("URL"))
 			{
-				ImageIndex = new ImageIndex(tag.Get<string>("URL"), tag.Get<int>("SizeX"), tag.Get<int>("SizeY"));
-            }
+				int sizeX = tag.Get<int>("SizeX");
+				int sizeY = tag.Get<int>("SizeY");
+				PaintingData = new PaintingData(new ImageIndex(tag.Get<string>("URL"), sizeX * 16, sizeY * 16), sizeX, sizeY);
+			}
+			else if (tag.ContainsKey("Index"))
+			{
+				ObsoleteImageIndex obsoleteIndex = ObsoleteImageIndex.Load(tag.Get<TagCompound>("Index"));
+				ImageIndex index = new ImageIndex(obsoleteIndex.URL, obsoleteIndex.ResolutionSizeX, obsoleteIndex.ResolutionSizeY);
+				PaintingData = new PaintingData(index, obsoleteIndex.SizeX, obsoleteIndex.SizeY, obsoleteIndex.FrameDuration);
+			}
 			else
-            {
-				ImageIndex = ImageIndex.Load(tag.Get<TagCompound>("Index"));
-            }
+			{
+				PaintingData = PaintingData.Load(tag.Get<TagCompound>("Data"));
+			}
 		}
-
-		public override void NetSend(BinaryWriter writer) => ImageIndex.NetSend(writer);
-
-		public override void NetReceive(BinaryReader reader) => ImageIndex.NetReceive(reader);
 	}
 }

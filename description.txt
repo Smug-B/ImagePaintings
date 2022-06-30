@@ -1,16 +1,6 @@
 This mod allows the creation of paintings which depicts images from a given URL.
 
-Players will be able to access these image paintings through the /painting command which functions as follows:
-/painting <URL> <Width> <Height> <OPTIONAL: Frame Duration> <OPTIONAL: Resolution Size X> <OPTIONAL: Resolution Size Y>
-<URL>: An URL that links to an image
-<Width>: A number specifying the width of the painting ( in blocks )
-<Height>: A number specifying the height of the painting ( in blocks )
-<OPTIONAL: Frame Duration>: An optional parameter specifying how long, in ticks ( 1 / 60th of a second ), should each frame of a GIF be played. Defaults to 5 and does nothing on normal paintings.
-<OPTIONAL: Resolution Size X>: An optional parameter specifying the resolution ( X ) of the image displayed, useful for reducing reducing the quality of a painting thereby saving memory
-<OPTIONAL: Resolution Size Y>: An optional parameter specifying the resolution ( Y ) of the image displayed, useful for reducing reducing the quality of a painting thereby saving memory
-
-An example of the default proper command usage would be: /painting https://i.imgur.com/o0xw022.jpeg 12 5
-Another example of proper command usage would be: /painting https://c.tenor.com/7YbmXq_ixXIAAAAd/zhukov.gif 20 12 3 200 120
+Players will be able to access these image paintings through the /paintingUI command which brings up an UI where players can input data about their desired paintings!
 
 NOTICE: In regards to GIFs
 1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
@@ -23,6 +13,14 @@ NOTICE: Bug reports are appreciated! You can do so through making an issue throu
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.6
+- Added placement preview to the new painting type
+
+Update v1.5
+- Added an Image Painting Creator UI
+- Internal improvements
+- Added a new painting type that can be placed anywhere and on-top of each other
 
 Update v1.4
 - Added config options to modify the initial connectivity tests when loading images. These may resolve your client appears to be offline issues...

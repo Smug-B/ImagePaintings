@@ -15,19 +15,7 @@ namespace ImagePaintings.Core.Graphics
 	{
 		private List<Texture2D> GIFData;
 
-		public int FrameDuration;
-
 		public int UsageTimer;
-
-		public override Texture2D GetTexture
-		{
-			get
-			{
-				TimeSinceLastUse = 0;
-				int frame = UsageTimer / FrameDuration;
-				return GIFData[frame % GIFData.Count];
-			}
-		}
 
 		public override void Update()
 		{
@@ -35,10 +23,9 @@ namespace ImagePaintings.Core.Graphics
 			UsageTimer++;
 		}
 
-		public GIFHandler(List<Texture2D> gifData, int frameDuration) : base(gifData[0])
+		public GIFHandler(List<Texture2D> gifData) : base(gifData[0])
 		{
 			GIFData = gifData;
-			FrameDuration = frameDuration;
 		}
 
 		public override void Unload() => Main.QueueMainThreadAction(() =>
@@ -50,6 +37,13 @@ namespace ImagePaintings.Core.Graphics
 
 				GIFData.Clear();
 			});
+
+		public new Texture2D GetTexture(int frameDuration)
+		{
+			TimeSinceLastUse = 0;
+			int frame = UsageTimer / frameDuration;
+			return GIFData[frame % GIFData.Count];
+		}
 
 		public static ImageData LoadGIF(ImageIndex imageIndex)
 		{
@@ -93,7 +87,7 @@ namespace ImagePaintings.Core.Graphics
 								gifData.Add(Texture2D.FromStream(Main.instance.GraphicsDevice, conversionStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false));
 								conversionStream.Dispose();
 							}
-							ImagePaintings.AllLoadedImages[imageIndex] = new GIFHandler(gifData, imageIndex.FrameDuration);
+							ImagePaintings.AllLoadedImages[imageIndex] = new GIFHandler(gifData);
 						}
 						else
 						{

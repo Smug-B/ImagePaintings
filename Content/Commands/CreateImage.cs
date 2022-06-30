@@ -18,6 +18,8 @@ namespace ImagePaintings.Content.Commands
 		// Dreadful, clean this up later
 		public override void Action(CommandCaller caller, string input, string[] args)
 		{
+			Main.NewText("This command is deprecated! Use /paintingUI to bring up a much more navigable UI for generating paintings!");
+
 			if (args.Length < 3 || args.Length > 6)
 			{
 				Main.NewText("You inputted " + args.Length + " arguments while the command expects 3 to 6.");
@@ -103,9 +105,19 @@ namespace ImagePaintings.Content.Commands
 				}
 			}
 
+			if (resSizeX <= 0)
+            {
+				resSizeX = sizeX * 16;
+            }
+
+			if (resSizeY <= 0)
+			{
+				resSizeY = sizeY * 16;
+			}
+
 			int imageIndex = Item.NewItem(Item.GetSource_None(), caller.Player.getRect(), ModContent.ItemType<ImagePainting>());
 			ImagePainting generatedPainting = Main.item[imageIndex].ModItem as ImagePainting;
-			generatedPainting.ImageIndex = new ImageIndex(args[0], sizeX, sizeY, frameDuration, resSizeX, resSizeY);
+			generatedPainting.PaintingData = new PaintingData(new ImageIndex(args[0], resSizeX, resSizeY), sizeX, sizeY, frameDuration);
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				NetMessage.SendData(MessageID.SyncItem, -1, -1, null, imageIndex, 1f);

@@ -7,41 +7,26 @@ namespace ImagePaintings
 	{
 		public string URL;
 
-		public int SizeX;
-
-		public int SizeY;
-
-		public int FrameDuration;
-
 		public int ResolutionSizeX;
 
 		public int ResolutionSizeY;
 
-		public ImageIndex(string url, int sizeX, int sizeY, int frameDuration = 5, int resSizeX = -1, int resSizeY = -1)
+		public ImageIndex(string url, int resSizeX, int resSizeY)
 		{
 			URL = url;
-			SizeX = sizeX;
-			SizeY = sizeY;
-			FrameDuration = frameDuration;
-			ResolutionSizeX = resSizeX <= 0 ? SizeX * 16 : resSizeX;
-			ResolutionSizeY = resSizeY <= 0 ? SizeY * 16 : resSizeY;
+			ResolutionSizeX = resSizeX;
+			ResolutionSizeY = resSizeY;
 		}
 
 		public TagCompound Save() => new TagCompound()
 		{
 			{ "URL", URL },
-			{ "SizeX", SizeX },
-			{ "SizeY", SizeY },
-			{ "FrameDuration", FrameDuration },
 			{ "ResolutionSizeX", ResolutionSizeX },
 			{ "ResolutionSizeY", ResolutionSizeY }
 		};
 
 		public static ImageIndex Load(TagCompound tag) => new ImageIndex(
 			tag.Get<string>("URL"),
-			tag.Get<int>("SizeX"),
-			tag.Get<int>("SizeY"),
-			tag.Get<int>("FrameDuration"),
 			tag.Get<int>("ResolutionSizeX"),
 			tag.Get<int>("ResolutionSizeY"));
 
@@ -54,9 +39,6 @@ namespace ImagePaintings
 			}
 
 			writer.Write(URL);
-			writer.Write(SizeX);
-			writer.Write(SizeY);
-			writer.Write(FrameDuration);
 			writer.Write(ResolutionSizeX);
 			writer.Write(ResolutionSizeY);
 		}
@@ -67,9 +49,6 @@ namespace ImagePaintings
 			if (possibleURLValue != "Null")
 			{
 				URL = possibleURLValue;
-				SizeX = reader.ReadInt32();
-				SizeY = reader.ReadInt32();
-				FrameDuration = reader.ReadInt32();
 				ResolutionSizeX = reader.ReadInt32();
 				ResolutionSizeY = reader.ReadInt32();
 			}

@@ -12,6 +12,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.UI;
 
 namespace ImagePaintings
 {
@@ -19,7 +20,9 @@ namespace ImagePaintings
 	{
 		public enum MessageType : byte
 		{
+			CreateLegacyPainting,
 			CreatePainting,
+			KillLegacyPainting,
 			KillPainting,
 		}
 
@@ -29,12 +32,20 @@ namespace ImagePaintings
 
 		public static IDictionary<ImageIndex, ImageData> AllLoadedImages { get; internal set; } = new Dictionary<ImageIndex, ImageData>();
 
+		public UserInterface GeneratePaintingInterface { get; private set; }
+
+
 		public ImagePaintings() => Mod = this;
 
 		public override void Load()
 		{
 			PlaceholderImage = ModContent.Request<Texture2D>("ImagePaintings/LoadingPlaceholder", AssetRequestMode.ImmediateLoad).Value;
             On.Terraria.TileObject.DrawPreview += DetourDrawPreview;
+
+			if (!Main.dedServ)
+			{
+				GeneratePaintingInterface = new UserInterface();
+			}
 		}
 
         public override void Unload()
@@ -60,28 +71,29 @@ namespace ImagePaintings
 			Vector2 drawOffset = Main.screenPosition - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
 			int x = (int)(mouseTilePosition.X * 16f - drawOffset.X);
 			int y = (int)(mouseTilePosition.Y * 16f - drawOffset.Y);
-			Texture2D image = FetchImage(imagePainting.ImageIndex);
+			Texture2D image = FetchImage(imagePainting.PaintingData);
 			if (image != null)
 			{
-				Main.spriteBatch.Draw(image, new Rectangle(x, y, imagePainting.ImageIndex.SizeX * 16, imagePainting.ImageIndex.SizeY * 16), drawColor);
+				Main.spriteBatch.Draw(image, new Rectangle(x, y, imagePainting.PaintingData.SizeX * 16, imagePainting.PaintingData.SizeY * 16), drawColor);
 			}
 		}
 
-		public static Texture2D FetchImage(ImageIndex imageIndex)
+		public static Texture2D FetchImage(PaintingData paintingData)
 		{
 			ImagePaintingConfigs configs = ModContent.GetInstance<ImagePaintingConfigs>();
-			if (AllLoadedImages.TryGetValue(imageIndex, out ImageData imageData))
+			if (AllLoadedImages.TryGetValue(paintingData.ImageIndex, out ImageData imageData))
 			{
-				return configs.PlaceholderLoadingTexture ? imageData.GetTexture ?? PlaceholderImage : imageData.GetTexture;
+				Texture2D intendedTexture = imageData is GIFHandler gifHandler ? gifHandler.GetTexture(paintingData.FrameDuration) : imageData.GetTexture;
+				return configs.PlaceholderLoadingTexture ? intendedTexture ?? PlaceholderImage : intendedTexture;
 			}
 
-			AllLoadedImages.Add(imageIndex, new ImageData(null));
+			AllLoadedImages.Add(paintingData.ImageIndex, new ImageData(null));
 			Task.Run(() =>
 			{
-				ImageData imageData = imageIndex.URL.EndsWith(".gif") ? GIFHandler.LoadGIF(imageIndex) : ImageData.LoadTexture(imageIndex);
+				ImageData imageData = paintingData.ImageIndex.URL.EndsWith(".gif") ? GIFHandler.LoadGIF(paintingData.ImageIndex) : ImageData.LoadTexture(paintingData.ImageIndex);
 				if (imageData != null)
 				{
-					AllLoadedImages[imageIndex] = imageData;
+					AllLoadedImages[paintingData.ImageIndex] = imageData;
 				}
 			});
 			return configs.PlaceholderLoadingTexture ? PlaceholderImage : null;
@@ -92,16 +104,36 @@ namespace ImagePaintings
 			MessageType type = (MessageType)reader.ReadByte();
 			switch (type)
 			{
-				case MessageType.CreatePainting:
+				case MessageType.CreateLegacyPainting:
 					{
 						Point16 position = reader.ReadVector2().ToPoint16();
-						ImageIndex imageIndex = new ImageIndex();
-						imageIndex.NetReceive(reader);
-						ImagePaintingTile.PlacePainting(position.X, position.Y, imageIndex);
+						PaintingData paintingData = new PaintingData();
+						paintingData.NetReceive(reader);
+						ImagePaintingTile.PlacePainting(position.X, position.Y, paintingData);
 					}
 					break;
 
-				case MessageType.KillPainting:
+				case MessageType.CreatePainting:
+                    {
+						byte sender = reader.ReadByte();
+						Point16 position = reader.ReadVector2().ToPoint16();
+						PaintingData paintingData = new PaintingData();
+						paintingData.NetReceive(reader);
+						ImagePaintingWorldData.WorldPaintingData.Add(new KeyValuePair<Rectangle, PaintingData>(new Rectangle(position.X, position.Y, paintingData.SizeX, paintingData.SizeY), paintingData));
+
+						if (Main.netMode == NetmodeID.Server)
+                        {
+                            ModPacket packet = GetPacket();
+							packet.Write((byte)MessageType.CreatePainting);
+							packet.Write(sender);
+							packet.WriteVector2(position.ToVector2());
+							paintingData.NetSend(packet);
+							packet.Send(-1, sender);
+						}
+					}
+					break;
+
+				case MessageType.KillLegacyPainting:
 					{
 						byte sender = reader.ReadByte();
 						Point16 position = reader.ReadVector2().ToPoint16();
@@ -111,10 +143,31 @@ namespace ImagePaintings
 						if (Main.netMode == NetmodeID.Server)
 						{
 							ModPacket packet = GetPacket();
-							packet.Write((byte)MessageType.KillPainting);
+							packet.Write((byte)MessageType.KillLegacyPainting);
 							packet.Write(sender);
 							packet.WriteVector2(position.ToVector2());
 							packet.WriteVector2(size.ToVector2());
+							packet.Send(-1, sender);
+						}
+					}
+					break;
+
+				case MessageType.KillPainting:
+					{
+						byte sender = reader.ReadByte();
+						Point16 position = reader.ReadVector2().ToPoint16();
+						PaintingData paintingData = new PaintingData();
+						paintingData.NetReceive(reader);
+						Rectangle paintingHitbox = new Rectangle(position.X, position.Y, paintingData.SizeX, paintingData.SizeY);
+						ImagePaintingWorldData.WorldPaintingData.Remove(new KeyValuePair<Rectangle, PaintingData>(paintingHitbox, paintingData));
+
+						if (Main.netMode == NetmodeID.Server)
+						{
+							ModPacket packet = GetPacket();
+							packet.Write((byte)MessageType.KillPainting);
+							packet.Write(sender);
+							packet.WriteVector2(position.ToVector2());
+							paintingData.NetSend(packet);
 							packet.Send(-1, sender);
 						}
 					}

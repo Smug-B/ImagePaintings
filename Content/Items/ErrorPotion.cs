@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.GameContent.Creative;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -10,6 +11,7 @@ namespace ImagePaintings.Content.Items
         {
             DisplayName.SetDefault("Error Potion");
             Tooltip.SetDefault("Disables all image painting and shows the normally invisible tiles said paintings sit upon.");
+            CreativeItemSacrificesCatalog.Instance.SacrificeCountNeededByItemId[Type] = 1;
         }
 
         public override void SetDefaults()

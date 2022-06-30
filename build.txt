@@ -1,6 +1,6 @@
 displayName = Image Paintings
 author = Smug
-version = 1.4
+version = 1.6
 homepage = https://github.com/SmugBlanco/ImagePaintings/wiki
 hideCode = false
 hideResources = false

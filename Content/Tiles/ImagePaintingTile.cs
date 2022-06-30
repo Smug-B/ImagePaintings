@@ -36,17 +36,17 @@ namespace ImagePaintings.Content.Tiles
 			AddMapEntry(new Color(200, 170, 130), name);
 		}
 
-		public static void PlacePainting(int i, int j, ImageIndex imageIndex)
+		public static void PlacePainting(int i, int j, PaintingData paintingData)
 		{
 			ModTileEntity imagePaintingTileEntity = ModContent.GetInstance<ImagePaintingTileEntity>();
 			imagePaintingTileEntity.Hook_AfterPlacement(i, j, imagePaintingTileEntity.type, -1, -1, -1);
 			ImagePaintingTileEntity imagePaintingTEInstance = TileEntity.ByPosition[new Point16(i, j)] as ImagePaintingTileEntity;
-			imagePaintingTEInstance.SetData(imageIndex);
+			imagePaintingTEInstance.SetData(paintingData);
 			NetMessage.SendData(MessageID.TileEntitySharing, -1, -1, null, imagePaintingTEInstance.ID, i, j);
 
-			for (int x = i; x < i + imagePaintingTEInstance.ImageIndex.SizeX; x++)
+			for (int x = i; x < i + imagePaintingTEInstance.PaintingData.SizeX; x++)
 			{
-				for (int y = j; y < j + imagePaintingTEInstance.ImageIndex.SizeY; y++)
+				for (int y = j; y < j + imagePaintingTEInstance.PaintingData.SizeY; y++)
 				{
 					if (x == i && y == j)
 					{
@@ -60,7 +60,7 @@ namespace ImagePaintings.Content.Tiles
 				}
 			}
 
-			NetMessage.SendTileSquare(-1, i, j, imagePaintingTEInstance.ImageIndex.SizeX, imagePaintingTEInstance.ImageIndex.SizeY, TileChangeType.None);
+			NetMessage.SendTileSquare(-1, i, j, imagePaintingTEInstance.PaintingData.SizeX, imagePaintingTEInstance.PaintingData.SizeY, TileChangeType.None);
 		}
 
 		public override void PlaceInWorld(int i, int j, Item item)
@@ -75,20 +75,14 @@ namespace ImagePaintings.Content.Tiles
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				ModPacket packet = Mod.GetPacket();
-				packet.Write((byte)MessageType.CreatePainting);
+				packet.Write((byte)MessageType.CreateLegacyPainting);
 				packet.WriteVector2(new Vector2(i, j));
-				/*packet.Write(imagePainting.ImageIndex.URL);
-				packet.Write(imagePainting.ImageIndex.SizeX);
-				packet.Write(imagePainting.ImageIndex.SizeY);
-				packet.Write(imagePainting.ImageIndex.FrameDuration);
-				packet.Write(imagePainting.ImageIndex.ResolutionSizeX);
-				packet.Write(imagePainting.ImageIndex.ResolutionSizeY);*/
-				imagePainting.ImageIndex.NetSend(packet);
+				imagePainting.PaintingData.NetSend(packet);
 				packet.Send();
 			}
 			else
 			{
-				PlacePainting(i, j, imagePainting.ImageIndex);
+				PlacePainting(i, j, imagePainting.PaintingData);
 			}
 		}
 
@@ -132,7 +126,7 @@ namespace ImagePaintings.Content.Tiles
 			{
 				int imageIndex = Item.NewItem(Item.GetSource_NaturalSpawn(), new Rectangle((int)imagePaintingTileEntity.WorldPosition.X, (int)imagePaintingTileEntity.WorldPosition.Y, imagePaintingTileEntity.WorldSize.X, imagePaintingTileEntity.WorldSize.Y), ModContent.ItemType<ImagePainting>());
 				ImagePainting generatedPainting = Main.item[imageIndex].ModItem as ImagePainting;
-				generatedPainting.ImageIndex = imagePaintingTileEntity.ImageIndex;
+				generatedPainting.PaintingData = imagePaintingTileEntity.PaintingData;
 				if (Main.netMode == NetmodeID.MultiplayerClient)
 				{
 					NetMessage.SendData(MessageID.SyncItem, -1, -1, null, imageIndex, 1f);
@@ -143,7 +137,7 @@ namespace ImagePaintings.Content.Tiles
 				if (Main.netMode == NetmodeID.MultiplayerClient)
 				{
 					ModPacket packet = Mod.GetPacket();
-					packet.Write((byte)MessageType.KillPainting);
+					packet.Write((byte)MessageType.KillLegacyPainting);
 					packet.Write((byte)Main.myPlayer);
 					packet.WriteVector2(imagePaintingTileEntity.Position.ToVector2());
 					packet.WriteVector2(imagePaintingTileEntity.Hitbox.Size());
@@ -171,17 +165,18 @@ namespace ImagePaintings.Content.Tiles
 			{
 				if (ImagePaintingTileEntity.FetchTileEntity(new Point(i, j)) is ImagePaintingTileEntity imagePaintingTileEntity)
 				{
-					Texture2D image = FetchImage(imagePaintingTileEntity.ImageIndex);
+					Texture2D image = FetchImage(imagePaintingTileEntity.PaintingData);
 					if (image != null)
 					{
 						int x = (int)(i * 16 - drawOffset.X);
 						int y = (int)(j * 16 - drawOffset.Y);
-						float sourceWidth = image.Width / (float)imagePaintingTileEntity.ImageIndex.SizeX;
+						float sourceWidth = image.Width / (float)imagePaintingTileEntity.PaintingData.SizeX;
 						float widthScale = sourceWidth / 16f;
-						float sourceHeight = image.Height / (float)imagePaintingTileEntity.ImageIndex.SizeY;
+						float sourceHeight = image.Height / (float)imagePaintingTileEntity.PaintingData.SizeY;
 						float heightScale = sourceHeight / 16f;
 						Rectangle sourceRect = new Rectangle((int)(currentTile.TileFrameX * widthScale), (int)(currentTile.TileFrameY * heightScale), (int)sourceWidth, (int)sourceHeight);
-						spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, Lighting.GetColor(i, j));
+						Color drawColor = imagePaintingTileEntity.PaintingData.Brightness > 0 ? new Color(new Vector3(imagePaintingTileEntity.PaintingData.Brightness)) : Lighting.GetColor(i, j);
+						spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, drawColor);
 					}
 				}
 			}
@@ -194,14 +189,13 @@ namespace ImagePaintings.Content.Tiles
 
 				if (ImagePaintingTileEntity.FetchTileEntity(new Point(i, j)) is ImagePaintingTileEntity imagePaintingTileEntity)
 				{
-					Texture2D image = FetchImage(imagePaintingTileEntity.ImageIndex);
+					Texture2D image = FetchImage(imagePaintingTileEntity.PaintingData);
 					if (image != null)
 					{
 						int x = (int)(imagePaintingTileEntity.WorldPosition.X - drawOffset.X);
 						int y = (int)(imagePaintingTileEntity.WorldPosition.Y - drawOffset.Y);
-						spriteBatch.Draw(image,
-							new Rectangle(x, y, imagePaintingTileEntity.WorldSize.X, imagePaintingTileEntity.WorldSize.Y), 
-							Lighting.GetColor(i + imagePaintingTileEntity.ImageIndex.SizeX / 2, j + imagePaintingTileEntity.ImageIndex.SizeY/ 2));
+						Color drawColor = imagePaintingTileEntity.PaintingData.Brightness > 0 ? new Color(new Vector3(imagePaintingTileEntity.PaintingData.Brightness)) : Lighting.GetColor(i + imagePaintingTileEntity.PaintingData.SizeX / 2, j + imagePaintingTileEntity.PaintingData.SizeY / 2);
+						spriteBatch.Draw(image, new Rectangle(x, y, imagePaintingTileEntity.WorldSize.X, imagePaintingTileEntity.WorldSize.Y), drawColor);
 					}
 				}
 			}
