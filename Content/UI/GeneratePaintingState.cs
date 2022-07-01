@@ -9,6 +9,7 @@ using ImagePaintings.Core.UI.Elements;
 using Terraria.UI;
 using Terraria.ModLoader;
 using ImagePaintings.Content.Items;
+using Microsoft.Xna.Framework.Input;
 
 namespace ImagePaintings.Content.UI
 {
@@ -43,7 +44,8 @@ namespace ImagePaintings.Content.UI
 		public string Information => "What's New?"
 			+ "\n---------------------"
 			+ "\nThe newest version of Image Paintings brings this new UI, as well as a new type of painting that can be placed anywhere. "
-			+ "These paintings are only breakable with a 'Painting Hammer' which can be crafted from 5 pieces of wood."
+			+ "These paintings are only breakable with a 'Painting Hammer' which can be crafted from 5 pieces of wood. "
+			+ "To open this UI, type '/paintingUI'. To close, click the X button, press escape, or type '/paintingUI' again."
 			+ "\n---------------------"
 			+ "\nURL: The URL of the painting. Verify that your link ends with a compatible extension ( .png, .jpeg, .jpg, or .gif )."
 			+ "\n \nWidth: The width of the placed painting in blocks."
@@ -270,7 +272,24 @@ namespace ImagePaintings.Content.UI
 			Append(MasterBackground);
 		}
 
-        private void HandleHoverMouseOver(UIMouseEvent evt, UIElement listeningElement)
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+			if (Main.keyState.IsKeyDown(Keys.Escape))
+			{
+				SoundEngine.PlaySound(SoundID.MenuClose);
+				ModContent.GetInstance<GeneratePaintingState>().UserInterface.SetState(null);
+				return;
+			}
+
+			if (MasterBackground.ContainsPoint(Main.MouseScreen))
+			{
+				Main.LocalPlayer.mouseInterface = true;
+			}
+		}
+
+		private void HandleHoverMouseOver(UIMouseEvent evt, UIElement listeningElement)
 		{
 			if (evt.Target is UIPanel uiPanel)
 			{
