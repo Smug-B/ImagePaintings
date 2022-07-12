@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria.Audio;
 using Terraria.ModLoader;
+using ImagePaintings.Common.ModPlayers;
 
 namespace ImagePaintings.Content.Items
 {
@@ -35,17 +36,16 @@ namespace ImagePaintings.Content.Items
 		{
 			if (player.whoAmI == Main.myPlayer && Main.netMode != NetmodeID.Server)
 			{
-				Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
-
 				SoundEngine.PlaySound(SoundID.Dig, Main.MouseWorld);
-				ImagePaintingWorldData.WorldPaintingData.Add(new KeyValuePair<Rectangle, PaintingData>(new Rectangle(mouseTilePosition.X, mouseTilePosition.Y, PaintingData.SizeX, PaintingData.SizeY), PaintingData));
+				Point placePoint = player.GetModPlayer<OriginPlayer>().AdjustPointForPlaceOrigin(Main.MouseWorld.ToTileCoordinates());
+				ImagePaintingWorldData.WorldPaintingData.Add(new KeyValuePair<Rectangle, PaintingData>(new Rectangle(placePoint.X, placePoint.Y, PaintingData.SizeX, PaintingData.SizeY), PaintingData));
 
 				if (Main.netMode == NetmodeID.MultiplayerClient)
 				{
 					ModPacket packet = Mod.GetPacket();
 					packet.Write((byte)ImagePaintings.MessageType.CreatePainting);
 					packet.Write((byte)Main.myPlayer);
-					packet.WriteVector2(new Vector2(mouseTilePosition.X, mouseTilePosition.Y));
+					packet.WriteVector2(new Vector2(placePoint.X, placePoint.Y));
 					PaintingData.NetSend(packet);
 					packet.Send();
 				}

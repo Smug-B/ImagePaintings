@@ -9,6 +9,7 @@ using Terraria.ID;
 using static ImagePaintings.ImagePaintings;
 using Terraria.Chat;
 using Terraria.Localization;
+using ImagePaintings.Common.ModPlayers;
 
 namespace ImagePaintings.Content.Tiles
 {
@@ -44,19 +45,14 @@ namespace ImagePaintings.Content.Tiles
 			imagePaintingTEInstance.SetData(paintingData);
 			NetMessage.SendData(MessageID.TileEntitySharing, -1, -1, null, imagePaintingTEInstance.ID, i, j);
 
-			for (int x = i; x < i + imagePaintingTEInstance.PaintingData.SizeX; x++)
+			for (int x = 0; x < imagePaintingTEInstance.PaintingData.SizeX; x++)
 			{
-				for (int y = j; y < j + imagePaintingTEInstance.PaintingData.SizeY; y++)
+				for (int y = 0; y < imagePaintingTEInstance.PaintingData.SizeY; y++)
 				{
-					if (x == i && y == j)
-					{
-						continue;
-					}
-
-					WorldGen.PlaceTile(x, y, ModContent.TileType<ImagePaintingTile>(), true);
-					Tile newlyPlacedTile = Framing.GetTileSafely(x, y);
-					newlyPlacedTile.TileFrameX = (short)((x - i) * 16);
-					newlyPlacedTile.TileFrameY = (short)((y - j) * 16);
+					WorldGen.PlaceTile(i + x, j + y, ModContent.TileType<ImagePaintingTile>(), true);
+					Tile newlyPlacedTile = Framing.GetTileSafely(i + x, j + y);
+					newlyPlacedTile.TileFrameX = (short)(x * 16);
+					newlyPlacedTile.TileFrameY = (short)(y * 16);
 				}
 			}
 
@@ -72,17 +68,18 @@ namespace ImagePaintings.Content.Tiles
 
 			ImagePainting imagePainting = item.ModItem as ImagePainting;
 
+			Point placePoint = Main.LocalPlayer.GetModPlayer<OriginPlayer>().AdjustPointForPlaceOrigin(new Point(i, j));
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				ModPacket packet = Mod.GetPacket();
 				packet.Write((byte)MessageType.CreateLegacyPainting);
-				packet.WriteVector2(new Vector2(i, j));
+				packet.WriteVector2(placePoint.ToVector2());
 				imagePainting.PaintingData.NetSend(packet);
 				packet.Send();
 			}
 			else
 			{
-				PlacePainting(i, j, imagePainting.PaintingData);
+				PlacePainting(placePoint.X, placePoint.Y, imagePainting.PaintingData);
 			}
 		}
 

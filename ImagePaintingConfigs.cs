@@ -15,6 +15,7 @@ namespace ImagePaintings
 		+ "\nDiscards image textures shortly when said texture is not in use.")]
 		public bool LowMemoryMode;
 
+		[Header("Game Quality of Life")]
 		[BackgroundColor(200, 170, 130)]
 		[DefaultValue(true)]
 		[Label("Per Tile Drawing")]
@@ -36,6 +37,16 @@ namespace ImagePaintings
 			+ "\nSuggested for very low end PCs")]
 		public bool GIFs;
 
+		[BackgroundColor(200, 170, 130)]
+		[DefaultValue(false)]
+		[Label("Right Click Origin Configuration")]
+		[Tooltip("Allows you to modify your painting placement origin through right clicking!"
+			+ "\nSimply press and hold onto your binded 'Configure Place Origin' key while having a painting in hand, "
+			+ "then right click different areas of your screen to change your place origin."
+			+ "\nUseful when you don't own a 75+% keyboard.")]
+		public bool RightClickOriginConfiguration;
+
+		[Header("Networking")]
 		[BackgroundColor(200, 170, 130)]
 		[DefaultValue(1000)]
 		[Range(1000, 100000)]
@@ -60,5 +71,13 @@ namespace ImagePaintings
 			+ "\nUseful in circumstances where all other options fail despite you being connected to the internet."
 			+ "\nNOTICE: If you are offline, and the image request connection fails, this may or may not crash your game.")]
 		public bool DisableOnlineTest;
+
+		[Header("Reload Required")]
+		[ReloadRequired]
+		[BackgroundColor(200, 170, 130)]
+		[DefaultValue(false)]
+		[Label("Alternative Draw ( > 12 FPS on GIFs )")]
+		[Tooltip("Utilises an alternative drawing method that allows for more FPS on GIF paintings at the cost of performance.")]
+		public bool AlternativeDraw;
 	}
 }

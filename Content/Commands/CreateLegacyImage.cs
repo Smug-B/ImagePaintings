@@ -1,19 +1,19 @@
-using Terraria;
+﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using ImagePaintings.Content.Items;
 
 namespace ImagePaintings.Content.Commands
 {
-	public class CreateImage : ModCommand
+	public class CreateLegacyImage : ModCommand
 	{
 		public override CommandType Type => CommandType.Chat;
 
-		public override string Command => "painting";
+		public override string Command => "paintingLegacy";
 
-		public override string Usage => "/painting <image url> <X size ( tiles )> <Y size ( tiles )> <OPTIONAL: frame duration> <OPTIONAL: resolution X size> <OPTIONAL: resolution Y size>";
+		public override string Usage => "/paintingLegacy <image url> <X size ( tiles )> <Y size ( tiles )> <OPTIONAL: frame duration> <OPTIONAL: resolution X size> <OPTIONAL: resolution Y size>";
 
-		public override string Description => "Spawns an unique painting ( legacy ) that displays an image when placed";
+		public override string Description => "Spawns an unique painting that displays an image when placed";
 
 		// Dreadful, clean this up later
 		public override void Action(CommandCaller caller, string input, string[] args)
@@ -67,7 +67,7 @@ namespace ImagePaintings.Content.Commands
 				}
 
 				if (args.Length > 4)
-                {
+				{
 					if (int.TryParse(args[4], out int possibleResSizeX))
 					{
 						if (possibleResSizeX <= 0)
@@ -106,16 +106,16 @@ namespace ImagePaintings.Content.Commands
 			}
 
 			if (resSizeX <= 0)
-            {
+			{
 				resSizeX = sizeX * 16;
-            }
+			}
 
 			if (resSizeY <= 0)
 			{
 				resSizeY = sizeY * 16;
 			}
 
-			int imageIndex = Item.NewItem(Item.GetSource_None(), caller.Player.getRect(), ModContent.ItemType<NewImagePainting>());
+			int imageIndex = Item.NewItem(Item.GetSource_None(), caller.Player.getRect(), ModContent.ItemType<ImagePainting>());
 			PaintingBase generatedPainting = Main.item[imageIndex].ModItem as PaintingBase;
 			generatedPainting.PaintingData = new PaintingData(new ImageIndex(args[0], resSizeX, resSizeY), sizeX, sizeY, frameDuration);
 			if (Main.netMode == NetmodeID.MultiplayerClient)

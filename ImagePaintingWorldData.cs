@@ -19,7 +19,67 @@ namespace ImagePaintings
         public override void Load()
         {
             WorldPaintingData = new List<KeyValuePair<Rectangle, PaintingData>>();
-            IL.Terraria.GameContent.Drawing.WallDrawing.DrawWalls += InsertPaintingDrawing;
+            if (ModContent.GetInstance<ImagePaintingConfigs>().AlternativeDraw)
+            {
+                IL.Terraria.Main.DoDraw_WallsTilesNPCs += AlternativeDraw;
+            }
+            else
+            {
+                IL.Terraria.GameContent.Drawing.WallDrawing.DrawWalls += InsertPaintingDrawing;
+            }
+        }
+
+        private void AlternativeDraw(ILContext il)
+        {
+            ILCursor cursor = new ILCursor(il);
+            if (!cursor.TryGotoNext(MoveType.After, i => i.MatchCall<Main>("DoDraw_WallsAndBlacks")))
+            {
+                Mod.Logger.Error("Failed to match first target for AlternativeDraw");
+                return;
+            }
+            else
+            {
+                Mod.Logger.Info("Successfully matched first target for AlternativeDraw");
+            }
+            cursor.EmitDelegate(HandleAltDraw);
+        }
+
+        private static void HandleAltDraw()
+        {
+            Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
+
+            foreach (KeyValuePair<Rectangle, PaintingData> data in WorldPaintingData)
+            {
+                int left = (int)(data.Key.X * 16 - drawOffset.X);
+                int right = (int)(data.Key.Right * 16 - drawOffset.X);
+                int top = (int)(data.Key.Y * 16 - drawOffset.Y);
+                int bottom = (int)(data.Key.Bottom * 16 - drawOffset.Y);
+                int buffer = 80; // 5 tiles
+                if (right < -buffer || left > Main.screenWidth + buffer || bottom < -buffer || top > Main.screenWidth + buffer)
+                {
+                    continue;
+                }
+
+                Texture2D image = ImagePaintings.FetchImage(data.Value);
+                if (image != null)
+                {
+                    for (int i = data.Key.X; i < data.Key.Right; i++)
+                    {
+                        for (int j = data.Key.Y; j < data.Key.Bottom; j++)
+                        {
+                            int x = (int)(i * 16 - drawOffset.X);
+                            int y = (int)(j * 16 - drawOffset.Y);
+                            float sourceWidth = image.Width / (float)data.Value.SizeX;
+                            float widthScale = sourceWidth / 16f;
+                            float sourceHeight = image.Height / (float)data.Value.SizeY;
+                            float heightScale = sourceHeight / 16f;
+                            Rectangle sourceRect = new Rectangle((int)((i - data.Key.X) * 16 * widthScale), (int)((j - data.Key.Y) * 16 * heightScale), (int)sourceWidth, (int)sourceHeight);
+                            Color drawColor = data.Value.Brightness > 0 ? new Color(new Vector3(data.Value.Brightness)) : Lighting.GetColor(i, j);
+                            Main.spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, drawColor);
+                        }
+                    }
+                }
+            }
         }
 
         private void InsertPaintingDrawing(ILContext il)
@@ -93,6 +153,12 @@ namespace ImagePaintings
                         float sourceHeight = image.Height / (float)data.Value.SizeY;
                         float heightScale = sourceHeight / 16f;
                         Rectangle sourceRect = new Rectangle((int)((i - data.Key.X) * 16 * widthScale), (int)((j - data.Key.Y) * 16 * heightScale), (int)sourceWidth, (int)sourceHeight);
+
+                        /*if (Framing.GetTileSafely(i, j).HasTile && Lighting.GetColor(i, j) == Color.Black)
+                        {
+                            return;
+                        }*/
+
                         Color drawColor = data.Value.Brightness > 0 ? new Color(new Vector3(data.Value.Brightness)) : Lighting.GetColor(i, j);
                         Main.spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, drawColor);
                     }

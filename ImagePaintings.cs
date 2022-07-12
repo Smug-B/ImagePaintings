@@ -63,19 +63,6 @@ namespace ImagePaintings
 				orig.Invoke(sb, op, position);
 				return;
 			}
-
-			ImagePainting imagePainting = heldItem.ModItem as ImagePainting;
-			Color drawColor = imagePainting.CanUseItem(player) ? Color.White * 0.5f : Color.Red * 0.35f;
-
-			Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
-			Vector2 drawOffset = Main.screenPosition - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
-			int x = (int)(mouseTilePosition.X * 16f - drawOffset.X);
-			int y = (int)(mouseTilePosition.Y * 16f - drawOffset.Y);
-			Texture2D image = FetchImage(imagePainting.PaintingData);
-			if (image != null)
-			{
-				Main.spriteBatch.Draw(image, new Rectangle(x, y, imagePainting.PaintingData.SizeX * 16, imagePainting.PaintingData.SizeY * 16), drawColor);
-			}
 		}
 
 		public static Texture2D FetchImage(PaintingData paintingData)

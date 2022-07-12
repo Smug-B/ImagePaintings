@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Terraria.ModLoader.IO;
 using ImagePaintings.Content.Tiles;
+using ImagePaintings.Common.ModPlayers;
 
 namespace ImagePaintings.Content.Items
 {
@@ -35,10 +36,10 @@ namespace ImagePaintings.Content.Items
 
 		public override bool CanUseItem(Player player)
 		{
-			Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
-			for (int x = mouseTilePosition.X; x < mouseTilePosition.X + PaintingData.SizeX; x++)
+			Point placePoint = player.GetModPlayer<OriginPlayer>().AdjustPointForPlaceOrigin(Main.MouseWorld.ToTileCoordinates());
+			for (int x = placePoint.X; x < placePoint.X + PaintingData.SizeX; x++)
 			{
-				for (int y = mouseTilePosition.Y; y < mouseTilePosition.Y + PaintingData.SizeY; y++)
+				for (int y = placePoint.Y; y < placePoint.Y + PaintingData.SizeY; y++)
 				{
 					if (!WorldGen.InWorld(x, y))
 					{

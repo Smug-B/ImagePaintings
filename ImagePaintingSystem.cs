@@ -1,4 +1,5 @@
-﻿using ImagePaintings.Content.Items;
+﻿using ImagePaintings.Common.ModPlayers;
+using ImagePaintings.Content.Items;
 using ImagePaintings.Core.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,20 +15,24 @@ namespace ImagePaintings
         {
 			Player player = Main.LocalPlayer;
 			Item heldItem = Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
-			if (heldItem.type != ModContent.ItemType<NewImagePainting>())
-			{
+			if (heldItem.type != ModContent.ItemType<NewImagePainting>() && heldItem.type != ModContent.ItemType<ImagePainting>())
+            {
 				return;
-			}
 
-			PaintingBase imagePainting = heldItem.ModItem as PaintingBase;
-			Point mouseTilePosition = Main.MouseWorld.ToTileCoordinates();
+            }
+
+			PaintingBase paintingBase = heldItem.ModItem as PaintingBase;
+			Color drawColor = heldItem.ModItem is ImagePainting imagePainting && !imagePainting.CanUseItem(player) ? Color.Red * 0.35f : Color.White * 0.5f;
+			Point placePoint = Main.MouseWorld.ToTileCoordinates();
 			Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
-			int x = (int)(mouseTilePosition.X * 16f - drawOffset.X);
-			int y = (int)(mouseTilePosition.Y * 16f - drawOffset.Y);
-			Texture2D image = ImagePaintings.FetchImage(imagePainting.PaintingData);
+			int x = (int)(placePoint.X * 16f - drawOffset.X);
+			int y = (int)(placePoint.Y * 16f - drawOffset.Y);
+			Texture2D image = ImagePaintings.FetchImage(paintingBase.PaintingData);
 			if (image != null)
 			{
-				spriteBatch.Draw(image, new Rectangle(x, y, imagePainting.PaintingData.SizeX * 16, imagePainting.PaintingData.SizeY * 16), Color.White * 0.5f);
+				spriteBatch.Draw(image,
+				new Rectangle(x, y, (int)(paintingBase.PaintingData.SizeX * 16 * Main.GameZoomTarget), (int)(paintingBase.PaintingData.SizeY * 16 * Main.GameZoomTarget)),
+				null, drawColor, 0f, player.GetModPlayer<OriginPlayer>().PaintingPlaceOrigin * 16, SpriteEffects.None, 0f);
 			}
 		}
 
