@@ -2,6 +2,8 @@ This mod allows the creation of paintings which depicts images from a given URL.
 
 Players will be able to access these image paintings through the /paintingUI command which brings up an UI where players can input data about their desired paintings!
 
+To delete paintings, players must craft a 'Painting Hammer' item through assembling 5 pieces of wood anywhere. Legacy paintings can be broken with a pickaxe.
+
 NOTICE: In regards to GIFs
 1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
 2) They are very memory intensive! Do not play attempt to play God unless you have sufficent amount of memory to use.
@@ -13,6 +15,17 @@ NOTICE: Bug reports are appreciated! You can do so through making an issue throu
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.8.3
+- Fixed preview display scaling with UIScale
+- Added different font support for Generate Painting UI
+- Fixed issue where exiting the UI while typing froze player inputs
+
+Update v1.8.2
+- PaintingUI no longer automatically opens on first load
+
+Update v1.8.1
+- Streamlined painting deletion net-code. This should* resolve issues with paintings refusing to break in multiplayer.
 
 Update v1.8
 - Added configuration for painting placement origins. Simply bind a key to your "Configure Place Origin" and hold said key while pressing your arrow keys -- when holding a painting -- to change your painting placement origin.

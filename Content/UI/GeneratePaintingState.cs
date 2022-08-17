@@ -10,6 +10,7 @@ using Terraria.UI;
 using Terraria.ModLoader;
 using ImagePaintings.Content.Items;
 using Microsoft.Xna.Framework.Input;
+using Terraria.GameContent;
 
 namespace ImagePaintings.Content.UI
 {
@@ -67,7 +68,7 @@ namespace ImagePaintings.Content.UI
 
 		public override void PreLoad(ref string name)
 		{
-			AutoSetState = true;
+			AutoSetState = false;
 			AutoAddHandler = true;
 		}
 
@@ -152,11 +153,12 @@ namespace ImagePaintings.Content.UI
 				};
 			}
 
+			float singleLineTextboxHeight = FontAssets.MouseText.Value.MeasureString("C").Y + 10;
 			WidthTextbox = new UITextbox(defaultText: "Width", includeScrollbar: false);
 			WidthTextbox.Left.Pixels = 10;
 			WidthTextbox.Top.Pixels = 530;
 			WidthTextbox.Width.Pixels = 175;
-			WidthTextbox.Height.Pixels = 38;
+			WidthTextbox.Height.Pixels = singleLineTextboxHeight;
 			WidthTextbox.OnMouseOver += HandleHoverMouseOver;
 			WidthTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(WidthTextbox, "Width", 1, 50);
@@ -167,7 +169,7 @@ namespace ImagePaintings.Content.UI
 			HeightTextbox.Left.Pixels = 195;
 			HeightTextbox.Top.Pixels = 530;
 			HeightTextbox.Width.Pixels = 175;
-			HeightTextbox.Height.Pixels = 38;
+			HeightTextbox.Height.Pixels = singleLineTextboxHeight;
 			HeightTextbox.OnMouseOver += HandleHoverMouseOver;
 			HeightTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(HeightTextbox, "Height", 1, 50);
@@ -175,9 +177,9 @@ namespace ImagePaintings.Content.UI
 
 			ResolutionWidthTextbox = new UITextbox(defaultText: "Width", includeScrollbar: false);
 			ResolutionWidthTextbox.Left.Pixels = 10;
-			ResolutionWidthTextbox.Top.Pixels = 602;
+			ResolutionWidthTextbox.Top.Pixels = 564 + singleLineTextboxHeight;
 			ResolutionWidthTextbox.Width.Pixels = 175;
-			ResolutionWidthTextbox.Height.Pixels = 38;
+			ResolutionWidthTextbox.Height.Pixels = singleLineTextboxHeight;
 			ResolutionWidthTextbox.OnMouseOver += HandleHoverMouseOver;
 			ResolutionWidthTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(ResolutionWidthTextbox, "Resolution Width", 1, 2048);
@@ -186,9 +188,9 @@ namespace ImagePaintings.Content.UI
 
 			ResolutionHeightTextbox = new UITextbox(defaultText: "Height", includeScrollbar: false);
 			ResolutionHeightTextbox.Left.Pixels = 195;
-			ResolutionHeightTextbox.Top.Pixels = 602;
+			ResolutionHeightTextbox.Top.Pixels = 564 + singleLineTextboxHeight;
 			ResolutionHeightTextbox.Width.Pixels = 175;
-			ResolutionHeightTextbox.Height.Pixels = 38;
+			ResolutionHeightTextbox.Height.Pixels = singleLineTextboxHeight;
 			ResolutionHeightTextbox.OnMouseOver += HandleHoverMouseOver;
 			ResolutionHeightTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(ResolutionHeightTextbox, "Resolution Height", 1, 2048);
@@ -198,7 +200,7 @@ namespace ImagePaintings.Content.UI
 			FramerateTextbox.Left.Pixels = 380;
 			FramerateTextbox.Top.Pixels = 96;
 			FramerateTextbox.Width.Pixels = 240f;
-			FramerateTextbox.Height.Pixels = 38f;
+			FramerateTextbox.Height.Pixels = singleLineTextboxHeight;
 			FramerateTextbox.OnMouseOver += HandleHoverMouseOver;
 			FramerateTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(FramerateTextbox, "Frame Duration", 1, 100);
@@ -207,9 +209,9 @@ namespace ImagePaintings.Content.UI
 
 			BrightnessTextbox = new UITextbox(defaultText: "Default", includeScrollbar: false);
 			BrightnessTextbox.Left.Pixels = 380;
-			BrightnessTextbox.Top.Pixels = 168;
+			BrightnessTextbox.Top.Pixels = 130 + singleLineTextboxHeight;
 			BrightnessTextbox.Width.Pixels = 240f;
-			BrightnessTextbox.Height.Pixels = 38f;
+			BrightnessTextbox.Height.Pixels = singleLineTextboxHeight;
 			BrightnessTextbox.OnMouseOver += HandleHoverMouseOver;
 			BrightnessTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(BrightnessTextbox, "Brightness", 0, 100);
@@ -218,9 +220,9 @@ namespace ImagePaintings.Content.UI
 
 			LegacyPaintingButton = new UITextbox(includeScrollbar: false, editable: false);
 			LegacyPaintingButton.Left.Pixels = 380;
-			LegacyPaintingButton.Top.Pixels = 240;
+			LegacyPaintingButton.Top.Pixels = 202 + singleLineTextboxHeight;
 			LegacyPaintingButton.Width.Pixels = 240f;
-			LegacyPaintingButton.Height.Pixels = 38;
+			LegacyPaintingButton.Height.Pixels = singleLineTextboxHeight;
 			LegacyPaintingButton.ForceUpdateText("False");
 			LegacyPaintingButton.OnMouseOver += HandleHoverMouseOver;
 			LegacyPaintingButton.OnMouseOut += HandleHoverMouseOut;
@@ -242,11 +244,13 @@ namespace ImagePaintings.Content.UI
 			outPutBoxSeparator.Height.Pixels = 2;
 			MasterBackground.Append(outPutBoxSeparator);
 
+			MasterBackground.Height.Pixels = ResolutionHeightTextbox.Top.Pixels + singleLineTextboxHeight + 10;
+
 			OutputTextbox = new UITextbox(editable: false);
 			OutputTextbox.Left.Pixels = 380;
 			OutputTextbox.Top.Pixels = 340;
 			OutputTextbox.Width.Pixels = 410f;
-			OutputTextbox.Height.Pixels = 300f;
+			OutputTextbox.Height.Pixels = MasterBackground.Height.Pixels - 350;
 			OutputTextbox.ForceUpdateText(Information);
 			createTextboxTitle(OutputTextbox, "READ ME");
 			MasterBackground.Append(OutputTextbox);
@@ -255,7 +259,7 @@ namespace ImagePaintings.Content.UI
 			GenerateButton.Left.Pixels = 640;
 			GenerateButton.Top.Pixels = 94;
 			GenerateButton.Width.Pixels = 150;
-			GenerateButton.Height.Pixels = 38f;
+			GenerateButton.Height.Pixels = singleLineTextboxHeight;
 			GenerateButton.ForceUpdateText("Generate");
 			GenerateButton.OnMouseOver += HandleHoverMouseOver;
 			GenerateButton.OnMouseOut += HandleHoverMouseOut;
@@ -265,9 +269,9 @@ namespace ImagePaintings.Content.UI
 
 			ResetButton = new UITextbox(includeScrollbar: false, editable: false);
 			ResetButton.Left.Pixels = 640;
-			ResetButton.Top.Pixels = 142;
+			ResetButton.Top.Pixels = 104 + singleLineTextboxHeight;
 			ResetButton.Width.Pixels = 150;
-			ResetButton.Height.Pixels = 38f;
+			ResetButton.Height.Pixels = singleLineTextboxHeight;
 			ResetButton.ForceUpdateText("Reset");
 			ResetButton.OnMouseOver += HandleHoverMouseOver;
 			ResetButton.OnMouseOut += HandleHoverMouseOut;
@@ -284,6 +288,7 @@ namespace ImagePaintings.Content.UI
 			if (Main.keyState.IsKeyDown(Keys.Escape))
 			{
 				SoundEngine.PlaySound(SoundID.MenuClose);
+				Main.blockInput = false;
 				ModContent.GetInstance<GeneratePaintingState>().UserInterface.SetState(null);
 				return;
 			}

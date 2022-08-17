@@ -42,6 +42,7 @@ namespace ImagePaintings.Content.Items
 					NewImagePainting generatedPainting = Main.item[imageIndex].ModItem as NewImagePainting;
 					generatedPainting.PaintingData = data.Value;
 					ImagePaintingWorldData.WorldPaintingData.Remove(data);
+
 					if (Main.netMode == NetmodeID.MultiplayerClient)
 					{
 						NetMessage.SendData(MessageID.SyncItem, -1, -1, null, imageIndex, 1f);
@@ -49,7 +50,7 @@ namespace ImagePaintings.Content.Items
 						packet.Write((byte)ImagePaintings.MessageType.KillPainting);
 						packet.Write((byte)player.whoAmI);
 						packet.WriteVector2(new Vector2(data.Key.X, data.Key.Y));
-						data.Value.NetSend(packet);
+						data.Value.BareNetSend(packet);
 						packet.Send();
 					}
 				}

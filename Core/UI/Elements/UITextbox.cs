@@ -65,11 +65,10 @@ namespace ImagePaintings.Core.UI.Elements
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
-			Vector2 mousePosition = new Vector2(Main.mouseX, Main.mouseY);
 			bool clicked = Main.mouseLeft || Main.mouseRight;
 			if (clicked && Editable)
 			{
-				if (ContainsPoint(mousePosition))
+				if (ContainsPoint(Main.MouseScreen))
 				{
 					Focus();
 				}

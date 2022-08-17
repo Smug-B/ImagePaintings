@@ -60,5 +60,17 @@ namespace ImagePaintings
 			FrameDuration = reader.ReadInt32();
 			Brightness = reader.ReadInt32();
 		}
+
+		public void BareNetSend(BinaryWriter writer)
+        {
+			writer.Write(SizeX);
+			writer.Write(SizeY);
+		}
+
+		public void BareNetRecieve(BinaryReader reader)
+        {
+			SizeX = reader.ReadInt32();
+			SizeY = reader.ReadInt32();
+		}
 	}
 }

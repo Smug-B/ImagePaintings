@@ -28,10 +28,11 @@ namespace ImagePaintings
 			int x = (int)(placePoint.X * 16f - drawOffset.X);
 			int y = (int)(placePoint.Y * 16f - drawOffset.Y);
 			Texture2D image = ImagePaintings.FetchImage(paintingBase.PaintingData);
+			float adjustForUIScale = 1 / Main.UIScale;
 			if (image != null)
 			{
 				spriteBatch.Draw(image,
-				new Rectangle(x, y, (int)(paintingBase.PaintingData.SizeX * 16 * Main.GameZoomTarget), (int)(paintingBase.PaintingData.SizeY * 16 * Main.GameZoomTarget)),
+				new Rectangle(x, y, (int)(paintingBase.PaintingData.SizeX * 16 * Main.GameZoomTarget * adjustForUIScale), (int)(paintingBase.PaintingData.SizeY * 16 * Main.GameZoomTarget * adjustForUIScale)),
 				null, drawColor, 0f, player.GetModPlayer<OriginPlayer>().PaintingPlaceOrigin * 16, SpriteEffects.None, 0f);
 			}
 		}

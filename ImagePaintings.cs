@@ -4,9 +4,12 @@ using ImagePaintings.Core.Graphics;
 using ImagePaintings.Core.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.RuntimeDetour;
+using MonoMod.RuntimeDetour.HookGen;
 using ReLogic.Content;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
@@ -40,13 +43,27 @@ namespace ImagePaintings
 		public override void Load()
 		{
 			PlaceholderImage = ModContent.Request<Texture2D>("ImagePaintings/LoadingPlaceholder", AssetRequestMode.ImmediateLoad).Value;
-            On.Terraria.TileObject.DrawPreview += DetourDrawPreview;
+			On.Terraria.TileObject.DrawPreview += DetourDrawPreview;
 
 			if (!Main.dedServ)
 			{
 				GeneratePaintingInterface = new UserInterface();
 			}
+
+			MonoModHooks.RequestNativeAccess();
+			PropertyInfo breathCDMax = typeof(Player).GetProperty("breathCDMax", BindingFlags.Public | BindingFlags.Instance);
+			MethodInfo replacementMethod = typeof(ImagePaintings).GetMethod("TestGetter", BindingFlags.Instance | BindingFlags.Public);
+			Detour hook = new Detour(breathCDMax.GetMethod, replacementMethod);
 		}
+
+		public int TestGetter()
+        {
+			if (Main.GameUpdateCount % 60 == 0)
+            {
+				Main.NewText("Aha");
+            }
+			return 100;
+        }
 
         public override void Unload()
 		{
@@ -144,9 +161,17 @@ namespace ImagePaintings
 						byte sender = reader.ReadByte();
 						Point16 position = reader.ReadVector2().ToPoint16();
 						PaintingData paintingData = new PaintingData();
-						paintingData.NetReceive(reader);
+						paintingData.BareNetRecieve(reader);
 						Rectangle paintingHitbox = new Rectangle(position.X, position.Y, paintingData.SizeX, paintingData.SizeY);
-						ImagePaintingWorldData.WorldPaintingData.Remove(new KeyValuePair<Rectangle, PaintingData>(paintingHitbox, paintingData));
+						for (int i = ImagePaintingWorldData.WorldPaintingData.Count - 1; i >= 0; i--)
+                        {
+							KeyValuePair<Rectangle, PaintingData> keyValuePair = ImagePaintingWorldData.WorldPaintingData[i];
+							if (keyValuePair.Key == paintingHitbox)
+                            {
+								ImagePaintingWorldData.WorldPaintingData.Remove(keyValuePair);
+								break;
+                            }
+						}
 
 						if (Main.netMode == NetmodeID.Server)
 						{
@@ -154,7 +179,7 @@ namespace ImagePaintings
 							packet.Write((byte)MessageType.KillPainting);
 							packet.Write(sender);
 							packet.WriteVector2(position.ToVector2());
-							paintingData.NetSend(packet);
+							paintingData.BareNetSend(packet);
 							packet.Send(-1, sender);
 						}
 					}
