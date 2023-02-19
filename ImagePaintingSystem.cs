@@ -3,6 +3,7 @@ using ImagePaintings.Content.Items;
 using ImagePaintings.Core.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -11,30 +12,30 @@ namespace ImagePaintings
 {
     public class ImagePaintingSystem : ModSystem
     {
-        public override void PostDrawInterface(SpriteBatch spriteBatch)
-        {
+        public override void PostDrawTiles()
+		{
 			Player player = Main.LocalPlayer;
 			Item heldItem = Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
 			if (heldItem.type != ModContent.ItemType<NewImagePainting>() && heldItem.type != ModContent.ItemType<ImagePainting>())
-            {
+			{
 				return;
-
-            }
+			}
 
 			PaintingBase paintingBase = heldItem.ModItem as PaintingBase;
 			Color drawColor = heldItem.ModItem is ImagePainting imagePainting && !imagePainting.CanUseItem(player) ? Color.Red * 0.35f : Color.White * 0.5f;
-			Point placePoint = Main.MouseWorld.ToTileCoordinates();
-			Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
-			int x = (int)(placePoint.X * 16f - drawOffset.X);
-			int y = (int)(placePoint.Y * 16f - drawOffset.Y);
+			Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+			Vector2 drawPosition = Main.Camera.ScaledPosition - Main.screenPosition + Main.MouseScreen * (1 / Main.GameZoomTarget);
+			drawPosition += Main.screenPosition;
+			drawPosition -= new Vector2(drawPosition.X % 16, drawPosition.Y % 16);
+			drawPosition -= Main.screenPosition;
 			Texture2D image = ImagePaintings.FetchImage(paintingBase.PaintingData);
-			float adjustForUIScale = 1 / Main.UIScale;
 			if (image != null)
 			{
-				spriteBatch.Draw(image,
-				new Rectangle(x, y, (int)(paintingBase.PaintingData.SizeX * 16 * Main.GameZoomTarget * adjustForUIScale), (int)(paintingBase.PaintingData.SizeY * 16 * Main.GameZoomTarget * adjustForUIScale)),
-				null, drawColor, 0f, player.GetModPlayer<OriginPlayer>().PaintingPlaceOrigin * 16, SpriteEffects.None, 0f);
+				Main.spriteBatch.Draw(image,
+				new Rectangle((int)drawPosition.X, (int)drawPosition.Y, paintingBase.PaintingData.SizeX * 16, paintingBase.PaintingData.SizeY * 16),
+				null, drawColor, 0f, player.GetModPlayer<OriginPlayer>().PaintingPlaceOrigin.ToWorldCoordinates(0, 0), SpriteEffects.None, 0f);
 			}
+			Main.spriteBatch.End();
 		}
 
         public override void PostUpdateEverything()

@@ -3,7 +3,6 @@ using ImagePaintings.Content.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
-using Terraria.GameContent.Achievements;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 

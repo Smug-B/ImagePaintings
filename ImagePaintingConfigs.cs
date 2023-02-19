@@ -20,7 +20,9 @@ namespace ImagePaintings
 		[DefaultValue(true)]
 		[Label("Per Tile Drawing")]
 		[Tooltip("Draws each tile individually."
-		+ "\nSlightly more cost ineffectively than the alternative.")]
+		+ "\nSlightly more cost ineffective than the alternative."
+		+ "\nDisability incompatible with Alternative Draw."
+		+ "\nDisability incompatible with large paintings.")]
 		public bool AccurateLighting;
 
 		[BackgroundColor(200, 170, 130)]
@@ -77,7 +79,10 @@ namespace ImagePaintings
 		[BackgroundColor(200, 170, 130)]
 		[DefaultValue(false)]
 		[Label("Alternative Draw ( > 12 FPS on GIFs )")]
-		[Tooltip("Utilises an alternative drawing method that allows for more FPS on GIF paintings at the cost of performance.")]
+		[Tooltip("Utilises an alternative drawing method that allows for: "
+            + "\n- More FPS on GIF paintings, "
+			+ "\n- Painting layering options,"
+			+ "\nAt the cost of performance.")]
 		public bool AlternativeDraw;
 	}
 }

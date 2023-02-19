@@ -38,14 +38,10 @@ namespace ImagePaintings.Content.Items
 				if (ImagePaintingWorldData.TryFindPainting(mouseTilePosition, out KeyValuePair<Rectangle, PaintingData> data, true, true))
 				{
 					SoundEngine.PlaySound(SoundID.Dig, Main.MouseWorld);
-					int imageIndex = Item.NewItem(Item.GetSource_NaturalSpawn(), data.Key.Center.ToWorldCoordinates(), ModContent.ItemType<NewImagePainting>());
-					NewImagePainting generatedPainting = Main.item[imageIndex].ModItem as NewImagePainting;
-					generatedPainting.PaintingData = data.Value;
 					ImagePaintingWorldData.WorldPaintingData.Remove(data);
 
 					if (Main.netMode == NetmodeID.MultiplayerClient)
 					{
-						NetMessage.SendData(MessageID.SyncItem, -1, -1, null, imageIndex, 1f);
 						ModPacket packet = Mod.GetPacket();
 						packet.Write((byte)ImagePaintings.MessageType.KillPainting);
 						packet.Write((byte)player.whoAmI);

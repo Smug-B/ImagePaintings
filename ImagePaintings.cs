@@ -37,7 +37,6 @@ namespace ImagePaintings
 
 		public UserInterface GeneratePaintingInterface { get; private set; }
 
-
 		public ImagePaintings() => Mod = this;
 
 		public override void Load()
@@ -49,21 +48,7 @@ namespace ImagePaintings
 			{
 				GeneratePaintingInterface = new UserInterface();
 			}
-
-			MonoModHooks.RequestNativeAccess();
-			PropertyInfo breathCDMax = typeof(Player).GetProperty("breathCDMax", BindingFlags.Public | BindingFlags.Instance);
-			MethodInfo replacementMethod = typeof(ImagePaintings).GetMethod("TestGetter", BindingFlags.Instance | BindingFlags.Public);
-			Detour hook = new Detour(breathCDMax.GetMethod, replacementMethod);
 		}
-
-		public int TestGetter()
-        {
-			if (Main.GameUpdateCount % 60 == 0)
-            {
-				Main.NewText("Aha");
-            }
-			return 100;
-        }
 
         public override void Unload()
 		{

@@ -25,13 +25,13 @@ namespace ImagePaintings.Content.Items
 			Item.width = 48;
 			Item.height = 34;
 
-			Item.consumable = true;
+			Item.consumable = false;
 
 			Item.useAnimation = 15;
 			Item.useTime = 15;
 			Item.useStyle = ItemUseStyleID.Swing;
 			Item.useTurn = true;
-			Item.autoReuse = true;
+			Item.autoReuse = false;
 		}
 
 		public override bool? UseItem(Player player)

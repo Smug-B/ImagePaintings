@@ -34,7 +34,7 @@ namespace ImagePaintings.Content.UI
 
 		public UITextbox BrightnessTextbox { get; private set; }
 
-		public UITextbox LegacyPaintingButton { get; private set; }
+		public UITextbox LayeringButton { get; private set; }
 
 		public UITextbox OutputTextbox { get; private set; }
 
@@ -44,14 +44,19 @@ namespace ImagePaintings.Content.UI
 
 		public string Information => "What's New?"
 			+ "\n---------------------"
-			+ "\nThe newest version of Image Paintings adds in configurable painting placement origin and an alternative draw for more FPS on GIFs. "
-			+ "\n \nPainting Placement Origin: "
+			+ "\nThe newest version of Image Paintings adds in options for configuring draw layer when utilizing Alternative Draw. "
+			+ "To make room for this new configuration, the option to generate Legacy Paintings has been removed."
+			+ "NOTICE: Above Tile paintings WILL look weird unless you configure a value for brightness. "
+			+ "\n \nNew paintings are no longer consumable! As a result, placed paintings will not be dropping their items upon destruction. "
+			+ "\n \nThe maximum size of paintings has also been increased from 50x50 blocks to 256x256 blocks! "
+			+ "(Why you would need that is beyond me)"
+			+ "\n \nAn hotkey to automatically bring up this UI is added, check your keybinds!"
+			+ "\n---------------------"
+			+ "\nPainting Placement Origin: "
 			+ "\nYou can stop placing paintings from the top left corner! "
 			+ "Simply head to your keybinds and bind your 'Configure Place Origin' key to something. "
 			+ "While holding that button, as well as a painting, you can press your arrow keys to change the place origin! "
 			+ "For users without a 75+% keyboard, head to your Image Painting Configs and look for a new toggle named 'Right Click Origin Configuration'..."
-			+ "\n \nAlternative Draw: "
-			+ "\nCheck your configs to toggle an alternate drawing method that allows for greater than 12 FPS on GIF paintings!"
 			+ "\n---------------------"
 			+ "\nURL: The URL of the painting. Verify that your link ends with a compatible extension ( .png, .jpeg, .jpg, or .gif )."
 			+ "\n \nWidth: The width of the placed painting in blocks."
@@ -63,8 +68,7 @@ namespace ImagePaintings.Content.UI
 			+ "\n \nFrame Duration: This setting is ignored on non GIF images but defaults to a value of 5. "
 			+ "Determines the duration of each frame in ticks, usually 1 / 60th of a second."
 			+ "\n \nBrightness: This value, if above 0, allows paintings to be drawn with a uniform brightness thereby disregarding environment lighting. "
-			+ "\n \nLegacy Painting: If true, the resulting painting will be a 'legacy' variant that places actual blocks. "
-			+ "By default, this is disabled.";
+			+ "\n \nLayering Options: Configures how the painting should be placed, whether behind walls, above walls, or above tiles. This only works with Alternative Draw enabled!";
 
 		public override void PreLoad(ref string name)
 		{
@@ -161,7 +165,7 @@ namespace ImagePaintings.Content.UI
 			WidthTextbox.Height.Pixels = singleLineTextboxHeight;
 			WidthTextbox.OnMouseOver += HandleHoverMouseOver;
 			WidthTextbox.OnMouseOut += HandleHoverMouseOut;
-			handleForcedNumericalValue(WidthTextbox, "Width", 1, 50);
+			handleForcedNumericalValue(WidthTextbox, "Width", 1, 256);
 			createTextboxTitle(WidthTextbox, "Dimensions in Blocks ( Required )");
 			MasterBackground.Append(WidthTextbox);
 
@@ -172,7 +176,7 @@ namespace ImagePaintings.Content.UI
 			HeightTextbox.Height.Pixels = singleLineTextboxHeight;
 			HeightTextbox.OnMouseOver += HandleHoverMouseOver;
 			HeightTextbox.OnMouseOut += HandleHoverMouseOut;
-			handleForcedNumericalValue(HeightTextbox, "Height", 1, 50);
+			handleForcedNumericalValue(HeightTextbox, "Height", 1, 256);
 			MasterBackground.Append(HeightTextbox);
 
 			ResolutionWidthTextbox = new UITextbox(defaultText: "Width", includeScrollbar: false);
@@ -204,7 +208,7 @@ namespace ImagePaintings.Content.UI
 			FramerateTextbox.OnMouseOver += HandleHoverMouseOver;
 			FramerateTextbox.OnMouseOut += HandleHoverMouseOut;
 			handleForcedNumericalValue(FramerateTextbox, "Frame Duration", 1, 100);
-			createTextboxTitle(FramerateTextbox, "Frame Duration ( GIFs Only )");
+			createTextboxTitle(FramerateTextbox, "Frame Duration ( GIFs )");
 			MasterBackground.Append(FramerateTextbox);
 
 			BrightnessTextbox = new UITextbox(defaultText: "Default", includeScrollbar: false);
@@ -218,17 +222,17 @@ namespace ImagePaintings.Content.UI
 			createTextboxTitle(BrightnessTextbox, "Brightness");
 			MasterBackground.Append(BrightnessTextbox);
 
-			LegacyPaintingButton = new UITextbox(includeScrollbar: false, editable: false);
-			LegacyPaintingButton.Left.Pixels = 380;
-			LegacyPaintingButton.Top.Pixels = 202 + singleLineTextboxHeight;
-			LegacyPaintingButton.Width.Pixels = 240f;
-			LegacyPaintingButton.Height.Pixels = singleLineTextboxHeight;
-			LegacyPaintingButton.ForceUpdateText("False");
-			LegacyPaintingButton.OnMouseOver += HandleHoverMouseOver;
-			LegacyPaintingButton.OnMouseOut += HandleHoverMouseOut;
-			LegacyPaintingButton.OnClick += ToggleBoolean;
-			createTextboxTitle(LegacyPaintingButton, "Legacy Painting?");
-			MasterBackground.Append(LegacyPaintingButton);
+			LayeringButton = new UITextbox(includeScrollbar: false, editable: false);
+			LayeringButton.Left.Pixels = 380;
+			LayeringButton.Top.Pixels = 202 + singleLineTextboxHeight;
+			LayeringButton.Width.Pixels = 240f;
+			LayeringButton.Height.Pixels = singleLineTextboxHeight;
+			LayeringButton.ForceUpdateText("Above Walls");
+			LayeringButton.OnMouseOver += HandleHoverMouseOver;
+			LayeringButton.OnMouseOut += HandleHoverMouseOut;
+			LayeringButton.OnClick += ToggleLayering;
+			createTextboxTitle(LayeringButton, "Layering Options");
+			MasterBackground.Append(LayeringButton);
 
 			UISeparator buttonSeparator = new UISeparator(Color.Black);
 			buttonSeparator.Left.Pixels = 630;
@@ -332,6 +336,25 @@ namespace ImagePaintings.Content.UI
 			}
 		}
 
+		private void ToggleLayering(UIMouseEvent evt, UIElement listeningElement)
+		{
+			if (evt.Target is UITextbox uiTextbox)
+			{
+				if (uiTextbox.CurrentText == "Above Walls")
+				{
+					uiTextbox.ForceUpdateText("Above Tiles");
+				}
+				else if (uiTextbox.CurrentText == "Above Tiles")
+				{
+					uiTextbox.ForceUpdateText("Behind Walls");
+				}
+				else
+				{
+					uiTextbox.ForceUpdateText("Above Walls");
+				}
+			}
+		}
+
 		private void ResetToZero(UIMouseEvent evt, UIElement listeningElement)
 		{
 			URLTextbox.ForceUpdateText(string.Empty);
@@ -354,10 +377,10 @@ namespace ImagePaintings.Content.UI
 			int resY = int.TryParse(ResolutionHeightTextbox.CurrentText, out int possibleResY) ? possibleResY : height * 16;
 			int frameDuration = int.TryParse(FramerateTextbox.CurrentText, out int possibleFrameDuration) ? possibleFrameDuration : 5;
 			int brightness = int.TryParse(BrightnessTextbox.CurrentText, out int possibleBrightness) ? possibleBrightness : 0;
-			int paintingType = LegacyPaintingButton.CurrentText == "True" ? ModContent.ItemType<ImagePainting>() : ModContent.ItemType<NewImagePainting>();
-			int imageIndex = Item.NewItem(Entity.GetSource_None(), Main.LocalPlayer.getRect(), paintingType);
+			PaintingRenderLayer layering = LayeringButton.CurrentText == "Above Walls" ? PaintingRenderLayer.BehindTiles : (LayeringButton.CurrentText == "Above Tiles" ? PaintingRenderLayer.AboveEverything : PaintingRenderLayer.BehindWall);
+			int imageIndex = Item.NewItem(Entity.GetSource_None(), Main.LocalPlayer.getRect(), ModContent.ItemType<NewImagePainting>());
 			PaintingBase generatedPainting = Main.item[imageIndex].ModItem as PaintingBase;
-			generatedPainting.PaintingData = new PaintingData(new ImageIndex(url, resX, resY), width, height, frameDuration, brightness);
+			generatedPainting.PaintingData = new PaintingData(new ImageIndex(url, resX, resY), width, height, frameDuration, brightness, layering);
 			if (Main.netMode == NetmodeID.MultiplayerClient)
 			{
 				NetMessage.SendData(MessageID.SyncItem, -1, -1, null, imageIndex, 1f);

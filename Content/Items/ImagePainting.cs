@@ -63,6 +63,7 @@ namespace ImagePaintings.Content.Items
 			+ "\nResolution Dimensions: " + PaintingData.ImageIndex.ResolutionSizeX + ", " + PaintingData.ImageIndex.ResolutionSizeY));
 			tooltips.Add(new TooltipLine(Mod, "Frame Duration", "Frame Duration: " + PaintingData.FrameDuration + " ticks, this is only relevant for GIFs"));
 			tooltips.Add(new TooltipLine(Mod, "Brightness", "Brightness: " + PaintingData.Brightness + " ticks, this is only relevant if the value is not -1"));
+			tooltips.Add(new TooltipLine(Mod, "Layer", "Layer Configuration" + PaintingData.DrawLayer.ToString()));
 
 			if (!Main.keyState.IsKeyDown(Keys.LeftShift))
 			{

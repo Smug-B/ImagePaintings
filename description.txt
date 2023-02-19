@@ -16,6 +16,15 @@ For more information please visit the homepage, https://github.com/SmugBlanco/Im
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Update v1.9
+- Finally, totally accurate placement preview
+- Added configuration for opening up the Painting UI with a keybind
+- Increased maximum painting size from 50x50 to 256x256
+- Added configuration for painting layering: behind walls, above walls, and above tiles (This only works with Alternative Draw enabled).
+- NOTICE: An ABOVE TILE painting WILL look weird unless an uniform brightness value is configured.
+- Paintings are no longer consumed upon placements.
+- Paintings no longer drop themselves upon destruction.
+
 Update v1.8.3
 - Fixed preview display scaling with UIScale
 - Added different font support for Generate Painting UI

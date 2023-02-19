@@ -18,13 +18,16 @@ namespace ImagePaintings
 
 		public const float PercentBrightness = 255f / 100f;
 
-		public PaintingData(ImageIndex imageIndex, int sizeX, int sizeY, int frameDuration = 5, float brightness = 0)
+		public PaintingRenderLayer DrawLayer;
+
+		public PaintingData(ImageIndex imageIndex, int sizeX, int sizeY, int frameDuration = 5, float brightness = 0, PaintingRenderLayer drawLayer = PaintingRenderLayer.AboveEverything)
 		{
 			ImageIndex = imageIndex;
 			SizeX = sizeX;
 			SizeY = sizeY;
 			FrameDuration = frameDuration;
 			Brightness = Utils.Clamp(brightness > 0 ? PercentBrightness * brightness : 0, 0, 255);
+			DrawLayer = drawLayer;
 		}
 
 		public TagCompound Save() => new TagCompound()
@@ -34,6 +37,7 @@ namespace ImagePaintings
 			{ "SizeY", SizeY },
 			{ "FrameDuration", FrameDuration },
 			{ "Brightness", Brightness },
+			{ "DrawLayer", (byte)DrawLayer },
 		};
 
 		public static PaintingData Load(TagCompound tag) => new PaintingData(
@@ -41,7 +45,8 @@ namespace ImagePaintings
 			tag.Get<int>("SizeX"),
 			tag.Get<int>("SizeY"),
 			tag.Get<int>("FrameDuration"),
-			tag.Get<float>("Brightness"));
+			tag.Get<float>("Brightness"),
+            (PaintingRenderLayer)tag.Get<byte>("DrawLayer"));
 
 		public void NetSend(BinaryWriter writer)
 		{
@@ -50,6 +55,7 @@ namespace ImagePaintings
 			writer.Write(SizeY);
 			writer.Write(FrameDuration);
 			writer.Write(Brightness);
+			writer.Write((byte)DrawLayer);
 		}
 
 		public void NetReceive(BinaryReader reader)
@@ -59,6 +65,7 @@ namespace ImagePaintings
 			SizeY = reader.ReadInt32();
 			FrameDuration = reader.ReadInt32();
 			Brightness = reader.ReadInt32();
+			DrawLayer = (PaintingRenderLayer)reader.ReadByte();
 		}
 
 		public void BareNetSend(BinaryWriter writer)

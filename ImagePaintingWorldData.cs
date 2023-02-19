@@ -29,10 +29,17 @@ namespace ImagePaintings
             }
         }
 
+        public override void PostDrawTiles()
+        {
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+            HandleAltDraw_AboveEverything();
+            Main.spriteBatch.End();
+        }
+
         private void AlternativeDraw(ILContext il)
         {
             ILCursor cursor = new ILCursor(il);
-            if (!cursor.TryGotoNext(MoveType.After, i => i.MatchCall<Main>("DoDraw_WallsAndBlacks")))
+            if (!cursor.TryGotoNext(MoveType.Before, i => i.MatchLdarg(0), i => i.MatchCall<Main>("DoDraw_WallsAndBlacks")))
             {
                 Mod.Logger.Error("Failed to match first target for AlternativeDraw");
                 return;
@@ -41,44 +48,112 @@ namespace ImagePaintings
             {
                 Mod.Logger.Info("Successfully matched first target for AlternativeDraw");
             }
-            cursor.EmitDelegate(HandleAltDraw);
+
+            cursor.EmitDelegate(HandleAltDraw_BehindWall);
+
+            if (!cursor.TryGotoNext(MoveType.Before, i => i.MatchLdarg(0), i => i.MatchCall<Main>("DrawWoF")))
+            {
+                Mod.Logger.Error("Failed to match second target for AlternativeDraw");
+                return;
+            }
+            else
+            {
+                Mod.Logger.Info("Successfully matched second target for AlternativeDraw");
+            }
+
+            cursor.EmitDelegate(HandleAltDraw_BehindTiles);
         }
 
-        private static void HandleAltDraw()
+        private static void Alt_DrawPaintingBlock(Vector2 drawOffset, KeyValuePair<Rectangle, PaintingData> data)
+        {
+            int left = (int)(data.Key.X * 16 - drawOffset.X);
+            int right = (int)(data.Key.Right * 16 - drawOffset.X);
+            int top = (int)(data.Key.Y * 16 - drawOffset.Y);
+            int bottom = (int)(data.Key.Bottom * 16 - drawOffset.Y);
+            int buffer = 80; // 5 tiles
+            if (right < -buffer || left > Main.screenWidth + buffer || bottom < -buffer || top > Main.screenWidth + buffer)
+            {
+                return;
+            }
+
+            Texture2D image = ImagePaintings.FetchImage(data.Value);
+            if (image == null)
+            {
+                return;
+            }
+
+            for (int i = data.Key.X; i < data.Key.Right; i++)
+            {
+                for (int j = data.Key.Y; j < data.Key.Bottom; j++)
+                {
+                    int x = (int)(i * 16 - drawOffset.X);
+                    int y = (int)(j * 16 - drawOffset.Y);
+                    float sourceWidth = image.Width / (float)data.Value.SizeX;
+                    float widthScale = sourceWidth / 16f;
+                    float sourceHeight = image.Height / (float)data.Value.SizeY;
+                    float heightScale = sourceHeight / 16f;
+                    Rectangle sourceRect = new Rectangle((int)((i - data.Key.X) * 16 * widthScale), (int)((j - data.Key.Y) * 16 * heightScale), (int)sourceWidth, (int)sourceHeight);
+                    Color drawColor = data.Value.Brightness > 0 ? new Color(new Vector3(data.Value.Brightness)) : Lighting.GetColor(i, j);
+                    Main.spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, drawColor);
+                }
+            }
+        }
+
+        private static void HandleAltDraw_BehindWall()
         {
             Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
 
+            if (WorldPaintingData == null)
+            {
+                return;
+            }
+
             foreach (KeyValuePair<Rectangle, PaintingData> data in WorldPaintingData)
             {
-                int left = (int)(data.Key.X * 16 - drawOffset.X);
-                int right = (int)(data.Key.Right * 16 - drawOffset.X);
-                int top = (int)(data.Key.Y * 16 - drawOffset.Y);
-                int bottom = (int)(data.Key.Bottom * 16 - drawOffset.Y);
-                int buffer = 80; // 5 tiles
-                if (right < -buffer || left > Main.screenWidth + buffer || bottom < -buffer || top > Main.screenWidth + buffer)
+                if (data.Value.DrawLayer != PaintingRenderLayer.BehindWall)
                 {
                     continue;
                 }
 
-                Texture2D image = ImagePaintings.FetchImage(data.Value);
-                if (image != null)
+                Alt_DrawPaintingBlock(drawOffset, data);
+            }
+        }
+
+        private static void HandleAltDraw_BehindTiles()
+        {
+            Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
+            if (WorldPaintingData == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<Rectangle, PaintingData> data in WorldPaintingData)
+            {
+                if (data.Value.DrawLayer != PaintingRenderLayer.BehindTiles)
                 {
-                    for (int i = data.Key.X; i < data.Key.Right; i++)
-                    {
-                        for (int j = data.Key.Y; j < data.Key.Bottom; j++)
-                        {
-                            int x = (int)(i * 16 - drawOffset.X);
-                            int y = (int)(j * 16 - drawOffset.Y);
-                            float sourceWidth = image.Width / (float)data.Value.SizeX;
-                            float widthScale = sourceWidth / 16f;
-                            float sourceHeight = image.Height / (float)data.Value.SizeY;
-                            float heightScale = sourceHeight / 16f;
-                            Rectangle sourceRect = new Rectangle((int)((i - data.Key.X) * 16 * widthScale), (int)((j - data.Key.Y) * 16 * heightScale), (int)sourceWidth, (int)sourceHeight);
-                            Color drawColor = data.Value.Brightness > 0 ? new Color(new Vector3(data.Value.Brightness)) : Lighting.GetColor(i, j);
-                            Main.spriteBatch.Draw(image, new Rectangle(x, y, 16, 16), sourceRect, drawColor);
-                        }
-                    }
+                    continue;
                 }
+
+                Alt_DrawPaintingBlock(drawOffset, data);
+            }
+        }
+
+        private static void HandleAltDraw_AboveEverything()
+        {
+            Vector2 drawOffset = Main.screenPosition;// - (Main.drawToScreen ? Vector2.Zero : new Vector2(Main.offScreenRange, Main.offScreenRange));
+            if (WorldPaintingData == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<Rectangle, PaintingData> data in WorldPaintingData)
+            {
+                if (data.Value.DrawLayer != PaintingRenderLayer.AboveEverything)
+                {
+                    continue;
+                }
+
+                Alt_DrawPaintingBlock(drawOffset, data);
             }
         }
 
