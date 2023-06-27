@@ -59,9 +59,18 @@ namespace ImagePaintings.Core.Graphics
 					memoryStream.Position = 0;
 					Main.QueueMainThreadAction(() =>
 					{
-						ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(Texture2D.FromStream(Main.instance.GraphicsDevice, memoryStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false));
-						memoryStream.Dispose();
-					});
+						try
+						{
+							ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(Texture2D.FromStream(Main.instance.GraphicsDevice, memoryStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false));
+							memoryStream.Dispose();
+						}
+                        catch (Exception exception)
+                        {
+                            ImagePaintings.Mod.Logger.Error(exception);
+                            Main.NewText("An error seems to have occured when fetching the image from the given URL.");
+                            Main.NewText("Please check your logs for more details.");
+                        }
+                    });
 				}
 			}
 			catch (Exception exception)

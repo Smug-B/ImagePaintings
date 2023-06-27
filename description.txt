@@ -16,6 +16,9 @@ For more information please visit the homepage, https://github.com/SmugBlanco/Im
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Update v1.9.1
+- Fixed an issue where loading incorrect image formats would crash the game.
+
 Update v1.9
 - Finally, totally accurate placement preview
 - Added configuration for opening up the Painting UI with a keybind

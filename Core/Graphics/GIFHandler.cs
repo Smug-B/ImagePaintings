@@ -74,32 +74,41 @@ namespace ImagePaintings.Core.Graphics
 					memoryStream.Position = 0;
 					Main.QueueMainThreadAction(() =>
 					{
-						Image newImage = Image.FromStream(memoryStream);
-						if (ModContent.GetInstance<ImagePaintingConfigs>().GIFs)
+						try
 						{
-							List<Texture2D> gifData = new List<Texture2D>();
-							int frameCount = newImage.GetFrameCount(FrameDimension.Time);
-							for (int frameIndexer = 0; frameIndexer < frameCount; frameIndexer++)
+							Image newImage = Image.FromStream(memoryStream);
+							if (ModContent.GetInstance<ImagePaintingConfigs>().GIFs)
 							{
-								newImage.SelectActiveFrame(FrameDimension.Time, frameIndexer);
+								List<Texture2D> gifData = new List<Texture2D>();
+								int frameCount = newImage.GetFrameCount(FrameDimension.Time);
+								for (int frameIndexer = 0; frameIndexer < frameCount; frameIndexer++)
+								{
+									newImage.SelectActiveFrame(FrameDimension.Time, frameIndexer);
+									Stream conversionStream = new MemoryStream();
+									newImage.Save(conversionStream, ImageFormat.Png);
+									gifData.Add(Texture2D.FromStream(Main.instance.GraphicsDevice, conversionStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false));
+									conversionStream.Dispose();
+								}
+								ImagePaintings.AllLoadedImages[imageIndex] = new GIFHandler(gifData);
+							}
+							else
+							{
 								Stream conversionStream = new MemoryStream();
 								newImage.Save(conversionStream, ImageFormat.Png);
-								gifData.Add(Texture2D.FromStream(Main.instance.GraphicsDevice, conversionStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false));
+								ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(Texture2D.FromStream(Main.instance.GraphicsDevice, conversionStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false));
 								conversionStream.Dispose();
 							}
-							ImagePaintings.AllLoadedImages[imageIndex] = new GIFHandler(gifData);
-						}
-						else
-						{
-							Stream conversionStream = new MemoryStream();
-							newImage.Save(conversionStream, ImageFormat.Png);
-							ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(Texture2D.FromStream(Main.instance.GraphicsDevice, conversionStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false));
-							conversionStream.Dispose();
-						}
 
-						newImage.Dispose();
-						memoryStream.Dispose();
-					});
+							newImage.Dispose();
+							memoryStream.Dispose();
+						}
+                        catch (Exception exception)
+                        {
+                            ImagePaintings.Mod.Logger.Error(exception);
+                            Main.NewText("An error seems to have occured when fetching the image from the given URL.");
+                            Main.NewText("Please check your logs for more details.");
+                        }
+                    });
 				}
 			}
 			catch (Exception exception)
