@@ -1,0 +1,48 @@
+Mods: {
+	ImagePaintings: {
+		Keybinds: {
+			"Configure Place Origin.DisplayName": Configure Place Origin
+			"Toggle Painting UI.DisplayName": Toggle Painting UI
+		}
+
+		Tiles.ImagePaintingTile.MapEntry: Image Painting Tile
+
+		Buffs: {
+			ErrorSight: {
+				DisplayName: Error Sight
+				Description: Disables all image painting and shows the normally invisible tiles said paintings sit upon.
+			}
+		}
+
+		Items: {
+			ErrorPotion: {
+				DisplayName: Error Potion
+				Tooltip: Disables all image painting and shows the normally invisible tiles said paintings sit upon.
+			}
+
+			ImagePainting: {
+				DisplayName: Image Painting
+				Tooltip: Creates an image in the form of a painting on valid walled surfaces.
+			}
+
+			NewImagePainting: {
+				DisplayName: New Image Painting
+				Tooltip:
+					'''
+					Creates an image in the form of a painting, anywhere.
+					NOTE: These paintings can only be broken through a 'Painting Hammer'!
+					You can craft one through 5 pieces of wood!
+					'''
+			}
+
+			PaintingHammer: {
+				DisplayName: Painting Hammer
+				Tooltip:
+					'''
+					Can remove paintings that aren't bound by tiles or walls.
+					Too delicate to function as an actual hammer...
+					'''
+			}
+		}
+	}
+}

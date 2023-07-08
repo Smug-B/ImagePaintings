@@ -14,8 +14,8 @@ namespace ImagePaintings.Content.Items
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Image Painting [ Legacy ]");
-			Tooltip.SetDefault("Creates an image in the form of a painting on valid walled surfaces.");
+			// DisplayName.SetDefault("Image Painting [ Legacy ]");
+			// Tooltip.SetDefault("Creates an image in the form of a painting on valid walled surfaces.");
 		}
 
 		public override void SetDefaults()

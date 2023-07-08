@@ -40,6 +40,7 @@ namespace ImagePaintings.Core.Net
                 catch
                 {
                     Main.NewText("Failed to load images as the client appears to be offline...");
+                    Main.NewText("If this is not actually the case, please try turning on 'Disable Online Test' in your configurations and reload the image.");
                     return false;
                 }
             }
@@ -51,6 +52,7 @@ namespace ImagePaintings.Core.Net
                 if (includeChatText && !result)
                 {
                     Main.NewText("Failed to load images as the client appears to be offline...");
+                    Main.NewText("If this is not actually the case, please try turning on 'Alternative Online Test' in your configurations and reload the image.");
                 }
                 return result;
             }

@@ -32,8 +32,8 @@ namespace ImagePaintings.Content.Tiles
 			TileObjectData.newTile.Origin = new Point16(0, 0);
 			TileObjectData.addTile(Type);
 
-			ModTranslation name = CreateMapEntryName();
-			name.SetDefault("Image Painting");
+			LocalizedText name = CreateMapEntryName();
+			// name.SetDefault("Image Painting");
 			AddMapEntry(new Color(200, 170, 130), name);
 		}
 

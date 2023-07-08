@@ -25,7 +25,7 @@ namespace ImagePaintings.Common.ModSystems
             return result;
         }
 
-        private void InsertPreview(On.Terraria.GameContent.Drawing.TileDrawing.orig_Draw orig, Terraria.GameContent.Drawing.TileDrawing self, bool solidLayer, bool forRenderTargets, bool intoRenderTargets, int waterStyleOverride)
+        private void InsertPreview(Terraria.GameContent.Drawing.On_TileDrawing.orig_Draw orig, Terraria.GameContent.Drawing.TileDrawing self, bool solidLayer, bool forRenderTargets, bool intoRenderTargets, int waterStyleOverride)
         {
             orig.Invoke(self, solidLayer, forRenderTargets, intoRenderTargets, waterStyleOverride);
 

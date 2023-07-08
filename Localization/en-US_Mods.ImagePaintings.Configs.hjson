@@ -1,0 +1,94 @@
+ImagePaintingConfigs: {
+	DisplayName: Image Paintings Config
+
+	LowMemoryMode: {
+		Label: Low Memory Mode
+		Tooltip:
+			'''
+			NOTICE: This setting is currently ignored. 
+			Discards image textures shortly when said texture is not in use.
+			'''
+	}
+
+	AccurateLighting: {
+		Label: Per Tile Drawing
+		Tooltip:
+			'''
+			Draws each tile individually.
+			Slightly more cost ineffective than the alternative.
+			Disability incompatible with Alternative Draw.
+			Disability incompatible with large paintings.
+			'''
+	}
+
+	PlaceholderLoadingTexture: {
+		Label: Placeholder Loading Texture
+		Tooltip: Utilises an embeded texture as a placeholder for loading images.
+	}
+
+	GIFs: {
+		Label: GIFs
+		Tooltip:
+			'''
+			Determines whether or not GIFs are properly loaded. 
+			If this is disabled only the first frame of the GIF would be loaded. 
+			Suggested for very low end PCs
+			'''
+	}
+
+	RightClickOriginConfiguration: {
+		Label: Right Click Origin Configuration
+		Tooltip:
+			'''
+			Allows you to modify your painting placement origin through right clicking! 
+			Simply press and hold onto your binded 'Configure Place Origin' key while having a painting in hand, then right click different areas of your screen to change your place origin. 
+			Useful when you don't own a 75+% keyboard.
+			'''
+	}
+
+	PingResponseTimeout: {
+		Label: Ping Response Timeout
+		Tooltip:
+			'''
+			Determines the timeout on the standard connectivity test in milliseconds. 
+			Note: 1,000 milliseconds = 1 second
+			'''
+	}
+
+	AlternativeOnlineTest: {
+		Label: Alternative Online Test
+		Tooltip:
+			'''
+			Utilises an alternate connectivity test.
+			Useful in cases where the default option fails to adequately check for connectivity. 
+			It's suggested that, before using this option, make sure that your firewall or network are not blocking ping attempts.
+			'''
+	}
+
+	DisableOnlineTest: {
+		Label: Disable Online Test
+		Tooltip:
+			'''
+			Disables the online test done before attempting to pull images. 
+			Useful in circumstances where all other options fail despite you being connected to the internet.
+			NOTICE: If you are offline, and the image request connection fails, this may or may not crash your game.
+			'''
+	}
+
+	AlternativeDraw: {
+		Label: Alternative Draw ( > 12 FPS on GIFs )
+		Tooltip:
+			'''
+			Utilises an alternative drawing method that allows for:
+			- More FPS on GIF paintings, 
+			- Painting layering options, 
+			At the cost of performance.
+			'''
+	}
+
+	Headers: {
+		Game: Game Quality of Life
+		Networking: Networking
+		Reload: Reload Required
+	}
+}

@@ -92,7 +92,7 @@ namespace ImagePaintings.Content.UI
 			closeButton.Left.Pixels = -10;
 			closeButton.Top.Pixels = 10;
 			closeButton.HAlign = 1f;
-			closeButton.OnClick += (evt, listeningElement) =>
+			closeButton.OnLeftClick += (evt, listeningElement) =>
 			{
 				SoundEngine.PlaySound(SoundID.MenuClose);
 				ModContent.GetInstance<GeneratePaintingState>().UserInterface.SetState(null);
@@ -230,7 +230,7 @@ namespace ImagePaintings.Content.UI
 			LayeringButton.ForceUpdateText("Above Walls");
 			LayeringButton.OnMouseOver += HandleHoverMouseOver;
 			LayeringButton.OnMouseOut += HandleHoverMouseOut;
-			LayeringButton.OnClick += ToggleLayering;
+			LayeringButton.OnLeftClick += ToggleLayering;
 			createTextboxTitle(LayeringButton, "Layering Options");
 			MasterBackground.Append(LayeringButton);
 
@@ -267,7 +267,7 @@ namespace ImagePaintings.Content.UI
 			GenerateButton.ForceUpdateText("Generate");
 			GenerateButton.OnMouseOver += HandleHoverMouseOver;
 			GenerateButton.OnMouseOut += HandleHoverMouseOut;
-            GenerateButton.OnClick += GeneratePainting;
+            GenerateButton.OnLeftClick += GeneratePainting;
 			createTextboxTitle(GenerateButton, "Options");
 			MasterBackground.Append(GenerateButton);
 
@@ -279,7 +279,7 @@ namespace ImagePaintings.Content.UI
 			ResetButton.ForceUpdateText("Reset");
 			ResetButton.OnMouseOver += HandleHoverMouseOver;
 			ResetButton.OnMouseOut += HandleHoverMouseOut;
-            ResetButton.OnClick += ResetToZero;
+            ResetButton.OnLeftClick += ResetToZero;
 			MasterBackground.Append(ResetButton);
 
 			Append(MasterBackground);

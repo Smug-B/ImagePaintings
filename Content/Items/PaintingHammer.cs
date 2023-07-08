@@ -12,9 +12,9 @@ namespace ImagePaintings.Content.Items
 	{
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Painting Hammer");
-			Tooltip.SetDefault("Can remove paintings that aren't bound by tiles or walls."
-			+ "\nToo delicate to function as an actual hammer...");
+			// DisplayName.SetDefault("Painting Hammer");
+			/* Tooltip.SetDefault("Can remove paintings that aren't bound by tiles or walls."
+			+ "\nToo delicate to function as an actual hammer..."); */
 			CreativeItemSacrificesCatalog.Instance.SacrificeCountNeededByItemId[Type] = 1;
 		}
 

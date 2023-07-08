@@ -21,11 +21,11 @@ namespace ImagePaintings
             WorldPaintingData = new List<KeyValuePair<Rectangle, PaintingData>>();
             if (ModContent.GetInstance<ImagePaintingConfigs>().AlternativeDraw)
             {
-                IL.Terraria.Main.DoDraw_WallsTilesNPCs += AlternativeDraw;
+                Terraria.IL_Main.DoDraw_WallsTilesNPCs += AlternativeDraw;
             }
             else
             {
-                IL.Terraria.GameContent.Drawing.WallDrawing.DrawWalls += InsertPaintingDrawing;
+                Terraria.GameContent.Drawing.IL_WallDrawing.DrawWalls += InsertPaintingDrawing;
             }
         }
 

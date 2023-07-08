@@ -9,8 +9,8 @@ namespace ImagePaintings.Content.Items
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Error Potion");
-            Tooltip.SetDefault("Disables all image painting and shows the normally invisible tiles said paintings sit upon.");
+            // DisplayName.SetDefault("Error Potion");
+            // Tooltip.SetDefault("Disables all image painting and shows the normally invisible tiles said paintings sit upon.");
             CreativeItemSacrificesCatalog.Instance.SacrificeCountNeededByItemId[Type] = 1;
         }
 
@@ -35,7 +35,7 @@ namespace ImagePaintings.Content.Items
         {
             Recipe recipe = CreateRecipe();
             recipe.AddIngredient(ModContent.ItemType<ImagePainting>());
-            recipe.HasCondition(Recipe.Condition.NearWater);
+            recipe.HasCondition(Condition.NearWater);
             recipe.Register();
         }
     }

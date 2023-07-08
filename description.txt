@@ -16,6 +16,9 @@ For more information please visit the homepage, https://github.com/SmugBlanco/Im
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Update v1.9.2
+- Updated to 1.4.4-Preview
+
 Update v1.9.1
 - Fixed an issue where loading incorrect image formats would crash the game.
 

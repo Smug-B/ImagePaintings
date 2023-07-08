@@ -42,7 +42,7 @@ namespace ImagePaintings
 		public override void Load()
 		{
 			PlaceholderImage = ModContent.Request<Texture2D>("ImagePaintings/LoadingPlaceholder", AssetRequestMode.ImmediateLoad).Value;
-			On.Terraria.TileObject.DrawPreview += DetourDrawPreview;
+			Terraria.On_TileObject.DrawPreview += DetourDrawPreview;
 
 			if (!Main.dedServ)
 			{
@@ -56,7 +56,7 @@ namespace ImagePaintings
 			NetUtils.Unload();
 		}
 
-		private void DetourDrawPreview(On.Terraria.TileObject.orig_DrawPreview orig, SpriteBatch sb, TileObjectPreviewData op, Vector2 position)
+		private void DetourDrawPreview(Terraria.On_TileObject.orig_DrawPreview orig, SpriteBatch sb, TileObjectPreviewData op, Vector2 position)
 		{
 			Player player = Main.LocalPlayer;
 			Item heldItem = Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;

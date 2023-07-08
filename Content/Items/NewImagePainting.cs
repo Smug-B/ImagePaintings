@@ -14,10 +14,10 @@ namespace ImagePaintings.Content.Items
 
 		public override void SetStaticDefaults()
 		{
-			DisplayName.SetDefault("Image Painting");
-			Tooltip.SetDefault("Creates an image in the form of a painting, anywhere."
+			// DisplayName.SetDefault("Image Painting");
+			/* Tooltip.SetDefault("Creates an image in the form of a painting, anywhere."
 				+ "\nNOTE: These paintings can only be broken through a 'Painting Hammer'!"
-				+ "\nYou can craft one through 5 pieces of wood!");
+				+ "\nYou can craft one through 5 pieces of wood!"); */
 		}
 
 		public override void SetDefaults()

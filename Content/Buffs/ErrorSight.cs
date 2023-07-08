@@ -6,8 +6,8 @@ namespace ImagePaintings.Content.Buffs
     {
         public override void SetStaticDefaults()
         {
-            DisplayName.SetDefault("Error Sight");
-            Description.SetDefault("Disables all image painting and shows the normally invisible tiles said paintings sit upon.");
+            // DisplayName.SetDefault("Error Sight");
+            // Description.SetDefault("Disables all image painting and shows the normally invisible tiles said paintings sit upon.");
         }
     }
 }
