@@ -4,12 +4,10 @@ using ImagePaintings.Core.Graphics;
 using ImagePaintings.Core.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoMod.RuntimeDetour;
-using MonoMod.RuntimeDetour.HookGen;
 using ReLogic.Content;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.DataStructures;
@@ -37,26 +35,34 @@ namespace ImagePaintings
 
 		public UserInterface GeneratePaintingInterface { get; private set; }
 
+		public ImagePaintingClient ImagePaintingClient { get; private set; }
+
 		public ImagePaintings() => Mod = this;
 
 		public override void Load()
 		{
 			PlaceholderImage = ModContent.Request<Texture2D>("ImagePaintings/LoadingPlaceholder", AssetRequestMode.ImmediateLoad).Value;
-			Terraria.On_TileObject.DrawPreview += DetourDrawPreview;
+			On_TileObject.DrawPreview += DetourDrawPreview;
 
 			if (!Main.dedServ)
 			{
 				GeneratePaintingInterface = new UserInterface();
-			}
+                ImagePaintingClient = new ImagePaintingClient();
+            }
 		}
 
         public override void Unload()
 		{
 			PlaceholderImage = null;
-			NetUtils.Unload();
-		}
+			ImagePaintingClient?.Dispose();
+			foreach (ImageData imageData in AllLoadedImages.Values)
+			{
+				imageData.Unload();
+            }
+			AllLoadedImages.Clear();
+        }
 
-		private void DetourDrawPreview(Terraria.On_TileObject.orig_DrawPreview orig, SpriteBatch sb, TileObjectPreviewData op, Vector2 position)
+		private void DetourDrawPreview(On_TileObject.orig_DrawPreview orig, SpriteBatch sb, TileObjectPreviewData op, Vector2 position)
 		{
 			Player player = Main.LocalPlayer;
 			Item heldItem = Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
@@ -72,20 +78,13 @@ namespace ImagePaintings
 			ImagePaintingConfigs configs = ModContent.GetInstance<ImagePaintingConfigs>();
 			if (AllLoadedImages.TryGetValue(paintingData.ImageIndex, out ImageData imageData))
 			{
-				Texture2D intendedTexture = imageData is GIFHandler gifHandler ? gifHandler.GetTexture(paintingData.FrameDuration) : imageData.GetTexture;
+				Texture2D intendedTexture = imageData is GIFData gifData ? gifData.GetTexture(paintingData.FrameDuration) : imageData.GetTexture;
 				return configs.PlaceholderLoadingTexture ? intendedTexture ?? PlaceholderImage : intendedTexture;
 			}
 
 			AllLoadedImages.Add(paintingData.ImageIndex, new ImageData(null));
-			Task.Run(() =>
-			{
-				ImageData imageData = paintingData.ImageIndex.URL.EndsWith(".gif") ? GIFHandler.LoadGIF(paintingData.ImageIndex) : ImageData.LoadTexture(paintingData.ImageIndex);
-				if (imageData != null)
-				{
-					AllLoadedImages[paintingData.ImageIndex] = imageData;
-				}
-			});
-			return configs.PlaceholderLoadingTexture ? PlaceholderImage : null;
+            Task.Run(() => Mod.ImagePaintingClient.LoadTexture(paintingData.ImageIndex));
+            return configs.PlaceholderLoadingTexture ? PlaceholderImage : null;
 		}
 
 		public override void HandlePacket(BinaryReader reader, int whoAmI)

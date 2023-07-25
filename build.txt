@@ -7,3 +7,4 @@ hideResources = false
 includeSource = false
 buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*
 includePDB = false
+dllReferences = SixLabors.ImageSharp
