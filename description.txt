@@ -5,7 +5,7 @@ Players will be able to access these image paintings through the /paintingUI com
 To delete paintings, players must craft a 'Painting Hammer' item through assembling 5 pieces of wood anywhere. Legacy paintings can be broken with a pickaxe.
 
 NOTICE: In regards to GIFs
-1) Currently, only Windows support GIF paintings. Sorry Mac and Linux users.
+1) Mac and Linux users will attempt to load GIFs, but there is no guarentee of functionality as testing is pain.
 2) They are very memory intensive! Do not play attempt to play God unless you have sufficent amount of memory to use.
 3) For those wishing not to load GIFs, there is the new GIF config setting. GIFs will only load their first frame if the setting is disabled.
 4) It is highly suggested that you restart your game everytime you save and exit a world.
@@ -15,6 +15,11 @@ NOTICE: Bug reports are appreciated! You can do so through making an issue throu
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Update v1.9.3
+- Improved media detection instead of relying on url extensions
+- GIF implementation for Mac and Linux
+- Accurate GIF frame duration with default parameter
 
 Update v1.9.2
 - Updated to 1.4.4-Preview

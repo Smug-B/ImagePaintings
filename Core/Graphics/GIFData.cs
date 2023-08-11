@@ -1,20 +1,15 @@
-﻿using ImagePaintings.Core.Net;
-using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
-using System.Net;
 using Terraria;
-using Terraria.ModLoader;
 
 namespace ImagePaintings.Core.Graphics
 {
     public class GIFData : ImageData
     {
         private List<GIFFrame> GIFFrames;
+
+        public int CurrentFrame;
 
         public int UsageTimer;
 
@@ -38,11 +33,19 @@ namespace ImagePaintings.Core.Graphics
             GIFFrames.Clear();
         });
 
+        // Duration are in 10s of milliseconds
         public new Texture2D GetTexture(int frameDuration)
         {
             TimeSinceLastUse = 0;
-            int frame = UsageTimer / frameDuration;
-            return GIFFrames[frame % GIFFrames.Count].Texture;
+
+            float multiplier = frameDuration / 5; // Probably should remove frameDuration in lieu of something else... it's archaic
+            if (UsageTimer > (int)(GIFFrames[CurrentFrame].Duration * multiplier))
+            {
+                UsageTimer = 0;
+
+                CurrentFrame = ++CurrentFrame % GIFFrames.Count;
+            }
+            return GIFFrames[CurrentFrame].Texture;
         }
     }
 }

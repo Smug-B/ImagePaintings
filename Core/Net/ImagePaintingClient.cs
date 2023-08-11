@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
-using System.Threading.Tasks;
 using Terraria.ModLoader;
 using Terraria;
 using ImagePaintings.Core.Graphics;
@@ -17,12 +16,9 @@ using SixLabors.ImageSharp.Advanced;
 using System.Linq;
 using System.Reflection;
 using SixLabors.ImageSharp.Metadata;
-using ImagePaintings.Core.UI;
 using System.Drawing.Imaging;
 using WinImage = System.Drawing.Image;
-using static Terraria.GameContent.Bestiary.IL_BestiaryDatabaseNPCsPopulator.CommonTags.SpawnConditions;
 using System.Runtime.Versioning;
-
 namespace ImagePaintings.Core.Net
 {
     public class ImagePaintingClient : IDisposable
@@ -51,7 +47,7 @@ namespace ImagePaintings.Core.Net
 
         public ImagePaintingClient() => Client = new HttpClient();
 
-        public async Task<bool> IsOnline()
+        public bool IsOnline()
         {
             try
             {
@@ -62,7 +58,6 @@ namespace ImagePaintings.Core.Net
                 }
 
                 int timeOut = imagePaintingConfigs.PingResponseTimeout;
-
                 using Ping ping = new Ping();
                 foreach (IPAddress googleIPAddress in Google)
                 {
@@ -73,7 +68,7 @@ namespace ImagePaintings.Core.Net
                     }
                 }
 
-                HttpResponseMessage response = await Client.GetAsync("https://www.google.com/");
+                HttpResponseMessage response = Client.GetAsync("https://www.google.com/").Result;
                 if (response?.StatusCode == HttpStatusCode.OK)
                 {
                     return true;
@@ -81,7 +76,7 @@ namespace ImagePaintings.Core.Net
             }
             catch (Exception exception)
             {
-                Main.NewText(exception);
+                ImagePaintings.Mod.Logger.Error(exception);
             }
             return false;
         }
@@ -89,9 +84,14 @@ namespace ImagePaintings.Core.Net
         public void LoadTexture(ImageIndex imageIndex)
         {
             string uri = imageIndex.URL;
-
             try
             {
+                if (!IsOnline())
+                {
+                    Main.NewText("You appear to be offline! If this is not the case, try relogging into your world or disabling the online test through configs.");
+                    return;
+                }
+
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.SystemDefault;
                 HttpResponseMessage responseMessage = Client.GetAsync(uri).Result;
                 string rawMediaType = responseMessage.Content.Headers.ContentType.MediaType ?? throw new Exception("Could not recognize the media type associated with: " + uri);
@@ -118,7 +118,9 @@ namespace ImagePaintings.Core.Net
                 }
                 else if (mediaType == "text" && mediaSubType == "html")
                 {
-
+                    Main.NewText("The given url is not an image address: " + uri);
+                    Main.NewText("Try right clicking on the image and then copy the image address");
+                    throw new Exception("Media type of website associated with: " + uri);
                 }
             }
             catch (Exception exception)
@@ -128,9 +130,9 @@ namespace ImagePaintings.Core.Net
                 Main.NewText("Please check your logs for more details.");
             }
         }
-
+        
         private static Image NewImage(Configuration configuration, ImageMetadata metaData, IEnumerable<ImageFrame<Rgba32>> frames) => (Image<Rgba32>)ImageCtor.Invoke(new object[] { configuration, metaData, frames });
-
+        
         private static void TryLoadImage(ImageIndex imageIndex, HttpContent httpContent)
         {
             try
@@ -141,12 +143,8 @@ namespace ImagePaintings.Core.Net
                 {
                     try
                     {
-                        Main.NewText("Attempted to load Texture2D");
-                        Main.NewText(Main.instance.GraphicsDevice.ToString());
-                        Main.NewText("Stream length: " + contentStream.Length);
-
                         Texture2D loadedImage = Texture2D.FromStream(Main.instance.GraphicsDevice, contentStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false);
-                        //ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(loadedImage);
+                        ImagePaintings.AllLoadedImages[imageIndex] = new ImageData(loadedImage);
                     }
                     catch (Exception exception)
                     {
@@ -155,13 +153,9 @@ namespace ImagePaintings.Core.Net
                         Main.NewText("Please check your logs for more details.");
                     }
                 });
-
                 while (ImagePaintings.AllLoadedImages[imageIndex].GetTexture == null)
                 {
-
                 }
-
-                Main.NewText("We made it out the hood", 255, 100, 180);
             }
             catch (Exception exception)
             {
@@ -175,12 +169,10 @@ namespace ImagePaintings.Core.Net
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                Main.NewText("Loaded GIF WINDOWS");
                 TryLoadGIF_Windows(imageIndex, httpContent);
             }
             else
             {
-                Main.NewText("Loaded GIF CROSS PLATFORM");
                 TryLoadGIF_CrossPlatform(imageIndex, httpContent);
             }
         }
@@ -211,9 +203,8 @@ namespace ImagePaintings.Core.Net
                             using MemoryStream gifFrameStream = new MemoryStream();
                             gifImage.Save(gifFrameStream, ImageFormat.Png);
                             Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false);
-                            loadedFrames.Add(new GIFFrame(image, BitConverter.ToInt32(frameDurationData, 4 * frameIndexer)));
+                            loadedFrames.Add(new GIFFrame(image, (int)(BitConverter.ToInt32(frameDurationData, 4 * frameIndexer) * 0.6f)));
                         };
-
                         ImagePaintings.AllLoadedImages[imageIndex] = new GIFData(loadedFrames);
                     }
                     catch (Exception exception)
@@ -226,10 +217,7 @@ namespace ImagePaintings.Core.Net
 
                 while (ImagePaintings.AllLoadedImages[imageIndex].GetTexture == null)
                 {
-
                 }
-
-                Main.NewText("We made it out the hood", 255, 100, 180);
             }
             catch (Exception exception)
             {
@@ -238,7 +226,6 @@ namespace ImagePaintings.Core.Net
                 Main.NewText("Please check your logs for more details.");
             }
         }
-
         private static ImageData TryLoadGIF_CrossPlatform(ImageIndex imageIndex, HttpContent httpContent)
         {
             try
@@ -250,7 +237,6 @@ namespace ImagePaintings.Core.Net
                 int totalFrames = gifImage.Frames.Count;
                 Configuration imageConfiguration = gifImage.GetConfiguration();
                 List<Image<Rgba32>> cachedImages = new List<Image<Rgba32>>();
-
                 using Image<Rgba32> imageCanvas = new Image<Rgba32>(imageConfiguration, gifImage.Width, gifImage.Height);
                 for (int i = 0; i < totalFrames; i++)
                 {
@@ -268,14 +254,11 @@ namespace ImagePaintings.Core.Net
                             using MemoryStream gifFrameStream = new MemoryStream();
                             i.Save(gifFrameStream, new GifEncoder());
                             i.Dispose();
-                            Main.NewText(gifImage.Height);
-                            //Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false);
-                            //loadedFrames.Add(new GIFFrame(image, BitConverter.ToInt32(frameDurationData, 4 * frameIndexer)));
-                            //Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeY, false);
-                            return new GIFFrame(null, 100);// new GIFFrame(image, i.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay);
+                            Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false);
+                            return new GIFFrame(image, (int)(i.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay * 0.6f));
                         }).ToList();
 
-                        //ImagePaintings.AllLoadedImages[imageIndex] = new GIFData(loadedFrames);
+                        ImagePaintings.AllLoadedImages[imageIndex] = new GIFData(loadedFrames);
                     }
                     catch (Exception exception)
                     {
@@ -284,13 +267,9 @@ namespace ImagePaintings.Core.Net
                         Main.NewText("Please check your logs for more details.");
                     }
                 });
-
                 while (ImagePaintings.AllLoadedImages[imageIndex].GetTexture == null)
                 {
-
                 }
-
-                Main.NewText("We made it out the hood", 255, 100, 180);
             }
             catch (Exception exception)
             {
@@ -298,11 +277,10 @@ namespace ImagePaintings.Core.Net
                 Main.NewText("An error seems to have occured when serializing: " + imageIndex.URL);
                 Main.NewText("Please check your logs for more details.");
             }
-
             return null;
         }
 
-        public void Dispose() 
+        public void Dispose()
         {
             Client.Dispose();
             Google = null;
