@@ -15,6 +15,8 @@ NOTICE: Bug reports are appreciated! You can do so through making an issue throu
 For more information please visit the homepage, https://github.com/SmugBlanco/ImagePaintings/wiki -- or, for more immediate assistance, the discord server: https://discord.gg/xKgvBTc
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------
+Update v1.9.5
+- Fixed an issue where frame duration was not working as intended, provided there are multiple copies of the same GIF
 
 Update v1.9.3
 - Improved media detection instead of relying on url extensions

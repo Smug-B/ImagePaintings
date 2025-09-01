@@ -17,7 +17,6 @@ using System.Linq;
 using System.Reflection;
 using SixLabors.ImageSharp.Metadata;
 using System.Drawing.Imaging;
-using WinImage = System.Drawing.Image;
 using System.Runtime.Versioning;
 namespace ImagePaintings.Core.Net
 {
@@ -167,67 +166,6 @@ namespace ImagePaintings.Core.Net
 
         private static void TryLoadGIF(ImageIndex imageIndex, HttpContent httpContent)
         {
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-            {
-                TryLoadGIF_Windows(imageIndex, httpContent);
-            }
-            else
-            {
-                TryLoadGIF_CrossPlatform(imageIndex, httpContent);
-            }
-        }
-
-        [SupportedOSPlatform("windows")]
-        private static void TryLoadGIF_Windows(ImageIndex imageIndex, HttpContent httpContent)
-        {
-            try
-            {
-                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                {
-                    throw new Exception("Attempted to load " + imageIndex.URL + " using tools that only support Windows.");
-                }
-
-                using Stream contentStream = httpContent.ReadAsStream();
-                using WinImage gifImage = WinImage.FromStream(contentStream);
-                List<GIFFrame> loadedFrames = new List<GIFFrame>();
-                int frameCount = gifImage.GetFrameCount(FrameDimension.Time);
-                byte[] frameDurationData = gifImage.GetPropertyItem(0x5100).Value;
-
-                Main.QueueMainThreadAction(() =>
-                {
-                    try
-                    {
-                        for (int frameIndexer = 0; frameIndexer < frameCount; frameIndexer++)
-                        {
-                            gifImage.SelectActiveFrame(FrameDimension.Time, frameIndexer);
-                            using MemoryStream gifFrameStream = new MemoryStream();
-                            gifImage.Save(gifFrameStream, ImageFormat.Png);
-                            Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false);
-                            loadedFrames.Add(new GIFFrame(image, (int)(BitConverter.ToInt32(frameDurationData, 4 * frameIndexer) * 0.6f)));
-                        };
-                        ImagePaintings.AllLoadedImages[imageIndex] = new GIFData(loadedFrames);
-                    }
-                    catch (Exception exception)
-                    {
-                        ImagePaintings.Mod.Logger.Error(exception);
-                        Main.NewText("An error seems to have occured when fetching the image from the given URL.");
-                        Main.NewText("Please check your logs for more details.");
-                    }
-                });
-
-                while (ImagePaintings.AllLoadedImages[imageIndex].GetTexture == null)
-                {
-                }
-            }
-            catch (Exception exception)
-            {
-                ImagePaintings.Mod.Logger.Error(exception);
-                Main.NewText("An error seems to have occured when fetching the image from the given URL.");
-                Main.NewText("Please check your logs for more details.");
-            }
-        }
-        private static ImageData TryLoadGIF_CrossPlatform(ImageIndex imageIndex, HttpContent httpContent)
-        {
             try
             {
                 // TO DO (later): Find a way to differentiate between GIFs that record frame and those that record change...
@@ -235,7 +173,7 @@ namespace ImagePaintings.Core.Net
                 List<GIFFrame> loadedFrames = null;
                 using Image<Rgba32> gifImage = (Image<Rgba32>)Image.Load(contentStream);
                 int totalFrames = gifImage.Frames.Count;
-                Configuration imageConfiguration = gifImage.GetConfiguration();
+                Configuration imageConfiguration = gifImage.Configuration;
                 List<Image<Rgba32>> cachedImages = new List<Image<Rgba32>>();
                 using Image<Rgba32> imageCanvas = new Image<Rgba32>(imageConfiguration, gifImage.Width, gifImage.Height);
                 for (int i = 0; i < totalFrames; i++)
@@ -253,7 +191,6 @@ namespace ImagePaintings.Core.Net
                         {
                             using MemoryStream gifFrameStream = new MemoryStream();
                             i.Save(gifFrameStream, new GifEncoder());
-                            i.Dispose();
                             Texture2D image = Texture2D.FromStream(Main.instance.GraphicsDevice, gifFrameStream, imageIndex.ResolutionSizeX, imageIndex.ResolutionSizeX, false);
                             return new GIFFrame(image, (int)(i.Frames.RootFrame.Metadata.GetGifMetadata().FrameDelay * 0.6f));
                         }).ToList();
@@ -277,7 +214,6 @@ namespace ImagePaintings.Core.Net
                 Main.NewText("An error seems to have occured when serializing: " + imageIndex.URL);
                 Main.NewText("Please check your logs for more details.");
             }
-            return null;
         }
 
         public void Dispose()

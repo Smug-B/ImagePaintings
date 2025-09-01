@@ -11,7 +11,7 @@ namespace ImagePaintings.Common.ModSystems
     {
         public override void Load()
         {
-            //On.Terraria.GameContent.Drawing.TileDrawing.Draw += InsertPreview;
+            Terraria.GameContent.Drawing.On_TileDrawing.Draw += InsertPreview;
         }
 
 		private Vector2 GetMouseWorldAccountingForZoom()

@@ -11,7 +11,7 @@ namespace ImagePaintings.Core.Graphics
         public GIFFrame(Texture2D texture, int duration)
         {
             Texture = texture;
-            Duration = duration;
+            Duration = duration <= 0 ? 1 : duration;
         }
     }
 }
